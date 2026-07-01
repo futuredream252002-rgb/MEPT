@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VPS Smart Bot Deployer</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; background-color: #1e1e2e; color: white; }
+        .container { max-width: 650px; margin: 20px auto; background: #252538; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        h2, h3 { text-align: center; color: #89b4fa; margin-bottom: 20px; }
+        label { font-size: 14px; color: #cdd6f4; font-weight: bold; display: block; margin-top: 10px; }
+        input, button { width: 100%; padding: 12px; margin: 8px 0 15px 0; border-radius: 6px; border: none; box-sizing: border-box; }
+        input[type="text"], input[type="password"], input[type="file"] { background: #313244; color: white; }
+        button { background: #89b4fa; color: #11111b; font-weight: bold; cursor: pointer; font-size: 16px; transition: 0.3s; }
+        button:hover { background: #b4befe; }
+        .hidden { display: none; }
+        #status { margin-top: 15px; color: #f9e2af; font-family: monospace; white-space: pre-wrap; text-align: center; font-weight: bold; }
+        
+        /* 🛠️ Tabs Navigation Styles */
+        .tabs-nav { display: flex; gap: 10px; margin-bottom: 25px; background: #1e1e2e; padding: 5px; border-radius: 8px; border: 1px solid #313244; }
+        .tab-btn { flex: 1; padding: 10px; background: transparent; color: #a6adc8; border: none; font-size: 14px; font-weight: bold; cursor: pointer; transition: 0.3s; margin: 0; border-radius: 6px; }
+        .tab-btn.active-js { background: #f9e2af; color: #11111b; }
+        .tab-btn.active-py { background: #306998; color: white; }
+        
+        .box { background: #1e1e2e; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #313244; }
+        .box-js { border-left: 5px solid #f9e2af; }
+        .box-py { border-left: 5px solid #306998; }
+        
+        table { width: 100%; border-collapse: collapse; background: #1e1e2e; border-radius: 6px; overflow: hidden; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #313244; font-size: 14px; }
+        th { background-color: #313244; color: #89b4fa; }
+        
+        .btn-delete { background: #f38ba8; color: #11111b; padding: 6px 10px; margin: 0; width: auto; font-size: 12px; border-radius: 4px; }
+        .btn-logs { background: #f9e2af; color: #11111b; padding: 6px 10px; margin: 0; width: auto; font-size: 12px; border-radius: 4px; font-weight: bold; }
+        
+        #log-viewer { background: #11111b; color: #a6e3a1; padding: 15px; border-radius: 6px; max-height: 250px; overflow-y: auto; font-family: monospace; font-size: 12px; white-space: pre-wrap; text-align: left; border: 1px solid #f38ba8; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div id="login-section">
+            <h2>VPS Server Status</h2>
+            <div style="text-align: center; color: #89b4fa; padding: 20px; font-size: 16px;">
+                🔄 Connecting to Dedicated Server...
+            </div>
+        </div>
+
+        <div id="dashboard-section" class="hidden">
+            <h3>🚀 Advanced Smart Dashboard</h3>
+            <p style="text-align: center; color: #a6e3a1;" id="connected-ip"></p>
+            <hr style="border-color: #313244; margin: 20px 0;">
+
+            <div class="tabs-nav">
+                <button class="tab-btn active-js" id="tab-js-btn" onclick="switchPage('js')">🟨 Node.js Bot Deploy</button>
+                <button class="tab-btn" id="tab-py-btn" onclick="switchPage('py')">🟦 Python Bot Deploy</button>
+            </div>
+
+            <div id="page-js" class="box box-js">
+                <h4 style="margin: 0 0 10px 0; color: #f9e2af;">🟨 Node.js Project Deployer</h4>
+                <label>Project Name:</label>
+                <input type="text" id="js-name" placeholder="Enter project name (e.g. bet-bot)">
+                
+                <label>Upload Bot File (.zip or .js):</label>
+                <input type="file" id="js-file" accept=".zip,.js" onchange="validateFile('js')">
+                
+                <button id="js-run-btn" onclick="deployBot('js')" style="background: #a6e3a1; color:#11111b; margin-bottom: 0;" class="hidden">Run Node.js Bot</button>
+            </div>
+
+            <div id="page-py" class="box box-py hidden">
+                <h4 style="margin: 0 0 10px 0; color: #306998;">🟦 Python Project Deployer</h4>
+                <label>Project Name:</label>
+                <input type="text" id="py-name" placeholder="Enter project name (e.g. signal-bot)">
+                
+                <label>Upload Bot File (.zip or .py):</label>
+                <input type="file" id="py-file" accept=".zip,.py" onchange="validateFile('py')">
+                
+                <label>Requirements File (Optional - .txt):</label>
+                <input type="file" id="py-req" accept=".txt">
+                
+                <button id="py-run-btn" onclick="deployBot('py')" style="background: #306998; color:white; margin-bottom: 0;" class="hidden">Run Python Bot</button>
+            </div>
+
+            <div class="box hidden" id="log-box">
+                <h4 style="margin: 0; color: #f38ba8;" id="log-title">🚨 Error Logs & Status</h4>
+                <div id="log-viewer">Fetching logs...</div>
+                <button id="refresh-log-btn" style="background: #6c7086; color: white; padding: 6px; font-size: 12px; margin-top: 8px;">Refresh Logs</button>
+            </div>
+
+            <h3>📜 Active Deployments</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Project Name</th>
+                        <th>User</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="history-list"></tbody>
+            </table>
+        </div>
+
+        <div id="status"></div>
+    </div>
+
+    <script>
+        const BACKEND_URL = 'http://43.229.150.54:3000';
+
+        // Auto Login Credentials
+        const SERVER_IP = "43.229.150.54";
+        const SERVER_USER = "ubuntu";
+        const SERVER_PASS = "V99dHJbADwlvdhfy";
+
+        let currentIp = SERVER_IP;
+        let currentUsername = SERVER_USER;
+        let currentPassword = SERVER_PASS;
+        let existingProjects = [];
+
+        window.onload = function() {
+            autoLoginVPS();
+        };
+
+        function switchPage(pageType) {
+            const pageJs = document.getElementById('page-js');
+            const pagePy = document.getElementById('page-py');
+            const tabJsBtn = document.getElementById('tab-js-btn');
+            const tabPyBtn = document.getElementById('tab-py-btn');
+
+            if (pageType === 'js') {
+                pageJs.classList.remove('hidden');
+                pagePy.classList.add('hidden');
+                tabJsBtn.classList.add('active-js');
+                tabPyBtn.classList.remove('active-py');
+            } else {
+                pageJs.classList.add('hidden');
+                pagePy.classList.remove('hidden');
+                tabJsBtn.classList.remove('active-js');
+                tabPyBtn.classList.add('active-py');
+            }
+        }
+
+        async function autoLoginVPS() {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerText = "⚡ VPS သို့ အလိုအလျောက် ချိတ်ဆက်နေပါသည်...";
+
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/verify-vps`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ip: SERVER_IP, username: SERVER_USER, password: SERVER_PASS })
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    statusDiv.innerText = "✅ ချိတ်ဆက်မှု အောင်မြင်သည်။";
+                    document.getElementById('login-section').classList.add('hidden');
+                    document.getElementById('dashboard-section').classList.remove('hidden');
+                    document.getElementById('connected-ip').innerText = `Connected to: ${SERVER_USER}@${SERVER_IP}`;
+                    loadHistory();
+                } else { statusDiv.innerText = `❌ ကျရှုံးပါသည်: ${data.message}`; }
+            } catch (err) { statusDiv.innerText = "❌ Backend ချိတ်မရပါ။"; }
+        }
+
+        function validateFile(type) {
+            const fileInput = document.getElementById(type === 'js' ? 'js-file' : 'py-file');
+            const runBtn = document.getElementById(type === 'js' ? 'js-run-btn' : 'py-run-btn');
+            
+            if (fileInput.files.length > 0) {
+                const fileName = fileInput.files[0].name;
+                const extension = fileName.split('.').pop().toLowerCase();
+                
+                if (type === 'js' && (extension === 'js' || extension === 'zip')) {
+                    runBtn.classList.remove('hidden');
+                } else if (type === 'py' && (extension === 'py' || extension === 'zip')) {
+                    runBtn.classList.remove('hidden');
+                } else {
+                    alert(`⚠️ ဖိုင်အမျိုးအစားမမှန်ပါ။ ${type.toUpperCase()} ဖိုင် သို့မဟုတ် Zip ဖိုင်သာ ရွေးချယ်ပါ။`);
+                    fileInput.value = "";
+                    runBtn.classList.add('hidden');
+                }
+            } else {
+                runBtn.classList.add('hidden');
+            }
+        }
+
+        async function deployBot(type) {
+            const nameInput = document.getElementById(type === 'js' ? 'js-name' : 'py-name');
+            const fileInput = document.getElementById(type === 'js' ? 'js-file' : 'py-file');
+            const statusDiv = document.getElementById('status');
+            
+            const projectName = nameInput.value.trim().replace(/\s+/g, '-');
+
+            if (!projectName) return alert("⚠️ Project Name အရင်ထည့်ပေးပါဗျာ။");
+            
+            if (existingProjects.includes(projectName)) {
+                return alert(`❌ "${projectName}" ဆိုတဲ့ နာမည်က ရှိပြီးသားဖြစ်လို့ နာမည်အသစ်တစ်ခု ပြောင်းပေးပါဗျာ။`);
+            }
+
+            statusDiv.innerText = `⚙️ ${projectName} အား Deploy လုပ်နေပါသည်...`;
+            
+            const formData = new FormData();
+            formData.append('ip', currentIp);
+            formData.append('username', currentUsername);
+            formData.append('password', currentPassword);
+            formData.append('botType', type);
+            formData.append('projectName', projectName);
+            formData.append('botFile', fileInput.files[0]);
+            
+            if (type === 'py' && document.getElementById('py-req').files.length > 0) {
+                formData.append('reqFile', document.getElementById('py-req').files[0]);
+            }
+
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/deploy-vps`, { method: 'POST', body: formData });
+                const data = await response.json();
+                
+                if (data.success) {
+                    statusDiv.style.color = "#a6e3a1";
+                    statusDiv.innerText = data.message;
+                } else {
+                    statusDiv.style.color = "#f38ba8";
+                    statusDiv.innerText = `❌ Error တက်သွားသဖြင့် Bot အား ရပ်တန့်လိုက်ပါပြီ။`;
+                    showLogsArea(projectName, data.logs);
+                }
+                // Deploy ပြီးလျှင်လည်း List ကို စနစ်တကျ အသစ်ပြန်ခေါ်မည်
+                await loadHistory();
+            } catch (err) { statusDiv.innerText = "❌ Deploy Error!"; }
+        }
+
+        function showLogsArea(projectName, logs) {
+            document.getElementById('log-box').classList.remove('hidden');
+            document.getElementById('log-title').innerText = `🚨 Error Logs (${projectName})`;
+            document.getElementById('log-viewer').innerText = logs || "No details error logs found.";
+            document.getElementById('refresh-log-btn').onclick = () => fetchLiveLogs(projectName);
+        }
+
+        async function fetchLiveLogs(projectName) {
+            const viewer = document.getElementById('log-viewer');
+            viewer.innerText = "Fetching fresh logs...";
+            const res = await fetch(`${BACKEND_URL}/api/logs`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ip: currentIp, username: currentUsername, password: currentPassword, projectName })
+            });
+            const data = await res.json();
+            viewer.innerText = data.logs;
+        }
+
+        async function loadHistory() {
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/history`);
+                const history = await res.json();
+                const tbody = document.getElementById('history-list');
+                tbody.innerHTML = history.length === 0 ? `<tr><td colspan="4" style="text-align:center;">No active deployments.</td></tr>` : "";
+
+                existingProjects = []; 
+                
+                history.forEach(item => {
+                    existingProjects.push(item.projectName);
+                    tbody.innerHTML += `
+                        <tr>
+                            <td><b>${item.projectName}</b></td>
+                            <td><span style="color:#cdd6f4">${item.username || 'root'}</span></td>
+                            <td style="color: #a6e3a1;">${item.status}</td>
+                            <td>
+                                <button class="btn-logs" onclick="showLogsArea('${item.projectName}', '')">Logs</button>
+                                <button class="btn-delete" onclick="deleteHistory('${item.id}', '${item.projectName}', '${item.username || 'root'}')">Delete</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            } catch (err) {
+                console.error("History ဆွဲမရပါ:", err);
+            }
+        }
+
+        // 🛠️ အပြောင်းအလဲလုပ်ထားသော Async/Await Delete Function
+        async function deleteHistory(id, projectName, vpsUser) {
+            if(!confirm(`"${projectName}" နှင့် သက်ဆိုင်သော ဖိုင်များကို VPS နှင့် Localhost ပေါ်မှ အပြီးတိုင် ဖျက်မလား?`)) return;
+            
+            const statusDiv = document.getElementById('status');
+            statusDiv.style.color = "#f9e2af";
+            statusDiv.innerText = `🗑️ "${projectName}" အား VPS ဆာဗာနှင့် မှတ်တမ်းထဲမှ အပြီးဖျက်နေပါသည်...`;
+
+            try {
+                // Backend က VPS ထဲမှာ လိုက်ဖျက်ပြီး သေချာ response ပြန်လာတဲ့အထိ စောင့်ခိုင်းလိုက်သည်
+                const res = await fetch(`${BACKEND_URL}/api/history/${id}?ip=${currentIp}&username=${vpsUser}&password=${currentPassword}&name=${projectName}`, { 
+                    method: 'DELETE' 
+                });
+                const data = await res.json();
+                
+                statusDiv.style.color = "#a6e3a1";
+                statusDiv.innerText = data.message;
+                
+                // Backend ထဲမှာ လုံးဝဖျက်ပြီးသွားပြီဖြစ်၍ ဇယားကို HTML ထဲကနေပါ ချက်ချင်း ပျောက်သွားအောင် Update ပြန်လုပ်သည်
+                await loadHistory();
+                
+            } catch (err) {
+                statusDiv.style.color = "#f38ba8";
+                statusDiv.innerText = "❌ ဖျက်ဆီးရာတွင် တစ်စုံတစ်ရာ အမှားအယွင်းရှိခဲ့ပါသည်။";
+                console.error(err);
+            }
+        }
+    </script>
+</body>
+</html>
