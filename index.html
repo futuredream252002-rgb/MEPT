@@ -1,25 +1,340 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
-    <title>UK Voice Dictionary</title>
-    <meta name="description" content="UK Voice Dictionary — built on Replit. Update this description to reflect the app." />
-    <meta name="robots" content="index, follow" />
-    <meta property="og:title" content="UK Voice Dictionary" />
-    <meta property="og:description" content="UK Voice Dictionary — built on Replit. Update this description to reflect the app." />
-    <meta property="og:type" content="website" />
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="UK Voice Dictionary" />
-    <meta name="twitter:description" content="UK Voice Dictionary — built on Replit. Update this description to reflect the app." />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script type="module" crossorigin src="/assets/index-DCGeeyiW.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-jrmUxNpk.css">
-  </head>
-  <body>
-    <div id="root"></div>
-  </body>
+<html lang="my">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Private Voice Call</title>
+    <!-- PeerJS CDN -->
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <style>
+        * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body {
+            background: #0f172a;
+            color: #f8fafc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 16px;
+        }
+        .card {
+            background: #1e293b;
+            padding: 28px 24px;
+            border-radius: 20px;
+            width: 100%;
+            max-width: 380px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+            text-align: center;
+        }
+        h2 { margin-top: 0; color: #38bdf8; font-size: 22px; }
+        .status {
+            background: #334155;
+            padding: 8px 14px;
+            border-radius: 12px;
+            font-size: 14px;
+            margin-bottom: 20px;
+            display: inline-block;
+            color: #e2e8f0;
+        }
+        .status.connected { background: #065f46; color: #6ee7b7; }
+        .status.calling { background: #854d0e; color: #fde047; }
+        .id-box {
+            background: #0f172a;
+            padding: 12px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border: 1px solid #334155;
+        }
+        .id-label { font-size: 12px; color: #94a3b8; margin-bottom: 4px; }
+        .my-id { font-size: 18px; font-weight: bold; color: #f472b6; letter-spacing: 1px; user-select: all; }
+        button {
+            width: 100%;
+            padding: 13px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-top: 10px;
+        }
+        .btn-copy { background: #334155; color: #fff; font-size: 13px; padding: 8px; margin-top: 8px; }
+        .btn-copy:active { background: #475569; }
+        input {
+            width: 100%;
+            padding: 13px;
+            border-radius: 12px;
+            border: 1px solid #475569;
+            background: #0f172a;
+            color: #fff;
+            font-size: 16px;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+        input:focus { outline: none; border-color: #38bdf8; }
+        .btn-call { background: #10b981; color: #fff; }
+        .btn-call:hover { background: #059669; }
+        .btn-end { background: #ef4444; color: #fff; display: none; }
+        .btn-mute { background: #f59e0b; color: #fff; display: none; }
+        .timer { font-size: 24px; font-weight: bold; margin: 15px 0; color: #38bdf8; display: none; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>Private Call</h2>
+    <div id="status" class="status">ချိတ်ဆက်နေသည်...</div>
+
+    <div class="id-box">
+        <div class="id-label">သင်၏ Call ID (တစ်ဖက်လူသို့ ပို့ပေးပါ)</div>
+        <div id="my-id" class="my-id">...</div>
+        <button class="btn-copy" onclick="copyId()">ID ကို Copy ကူးမည်</button>
+    </div>
+
+    <div id="dial-pad">
+        <input type="text" id="remote-id" placeholder="တစ်ဖက်လူ၏ ID ကိုရိုက်ထည့်ပါ">
+        <button class="btn-call" onclick="startCall()">ဖုန်းခေါ်မည် (Call)</button>
+    </div>
+
+    <div id="timer" class="timer">00:00</div>
+    <button id="btn-mute" class="btn-mute" onclick="toggleMute()">အသံပိတ်မည် (Mute)</button>
+    <button id="btn-end" class="btn-end" onclick="endCall()">ဖုန်းချမည် (End Call)</button>
+
+    <!-- Hidden Audio Element -->
+    <audio id="remote-audio" autoplay playsinline></audio>
+</div>
+
+<script>
+    let peer;
+    let localStream;
+    let currentCall;
+    let isMuted = false;
+    let timerInterval;
+    let seconds = 0;
+    let lastRemoteId = '';
+    let isCaller = false;
+
+    const statusEl = document.getElementById('status');
+    const myIdEl = document.getElementById('my-id');
+    const remoteInput = document.getElementById('remote-id');
+    const dialPad = document.getElementById('dial-pad');
+    const btnEnd = document.getElementById('btn-end');
+    const btnMute = document.getElementById('btn-mute');
+    const timerEl = document.getElementById('timer');
+    const remoteAudio = document.getElementById('remote-audio');
+
+    // 4-digit random short ID for easy typing
+    const randomShortId = 'love-' + Math.floor(1000 + Math.random() * 9000);
+
+    // STUN + Free OpenRelay TURN Servers for cross-network stability
+    const peerConfig = {
+        config: {
+            iceServers: [
+                { urls: 'stun:stun.l.google.com:19302' },
+                { urls: 'stun:stun1.l.google.com:19302' },
+                {
+                    urls: 'turn:openrelay.metered.ca:80',
+                    username: 'openrelayproject',
+                    credential: 'openrelayproject'
+                },
+                {
+                    urls: 'turn:openrelay.metered.ca:443',
+                    username: 'openrelayproject',
+                    credential: 'openrelayproject'
+                }
+            ],
+            sdpSemantics: 'unified-plan'
+        }
+    };
+
+    // Low-bandwidth Audio Optimization (Opus 20kbps)
+    function optimizeAudioSDP(sdp) {
+        let lines = sdp.split('\r\n');
+        let opusPayload = null;
+        for (let i = 0; i < lines.length; i++) {
+            if (lines[i].includes('opus/48000')) {
+                opusPayload = lines[i].split(':')[1].split(' ')[0];
+                break;
+            }
+        }
+        if (opusPayload) {
+            for (let i = 0; i < lines.length; i++) {
+                if (lines[i].startsWith('a=fmtp:' + opusPayload)) {
+                    // Limit maxaveragebitrate to 20000 bps (20kbps) & enable FEC (Forward Error Correction)
+                    lines[i] += ';maxaveragebitrate=20000;useinbandfec=1;usedtx=1';
+                }
+            }
+        }
+        return lines.join('\r\n');
+    }
+
+    // Initialize Microphone with Noise Suppression
+    async function initAudio() {
+        try {
+            localStream = await navigator.mediaDevices.getUserMedia({
+                audio: {
+                    echoCancellation: true,
+                    noiseSuppression: true,
+                    autoGainControl: true,
+                    sampleRate: 16000,
+                    channelCount: 1
+                },
+                video: false
+            });
+            initPeer();
+        } catch (err) {
+            updateStatus('မိုက်ခရိုဖုန်း ဖွင့်ခွင့်မရပါ (HTTPS ဖြင့်ဖွင့်ပါ)', '');
+            alert('Browser မှ Microphone ခွင့်ပြုချက် (Allow) ပေးရန် လိုအပ်ပါသည်။');
+        }
+    }
+
+    function initPeer() {
+        peer = new Peer(randomShortId, peerConfig);
+
+        peer.on('open', (id) => {
+            myIdEl.innerText = id;
+            updateStatus('အဆင်သင့်ဖြစ်ပါပြီ (Online)', '');
+        });
+
+        // Incoming Call Handler (Auto-Answer for convenience, or prompt)
+        peer.on('call', (call) => {
+            isCaller = false;
+            lastRemoteId = call.peer;
+            updateStatus('ဖုန်းဝင်နေသည်... လက်ခံချိတ်ဆက်နေပါသည်', 'calling');
+            call.answer(localStream, { sdpTransform: optimizeAudioSDP });
+            setupCallEvents(call);
+        });
+
+        peer.on('disconnected', () => {
+            updateStatus('လိုင်းပြတ်သွားပါသည်... ပြန်ချိတ်နေသည်', 'calling');
+            peer.reconnect();
+        });
+
+        peer.on('error', (err) => {
+            console.error(err);
+            if (err.type === 'peer-unavailable') {
+                updateStatus('တစ်ဖက်လူ Online မရှိပါ (ID ပြန်စစ်ပါ)', '');
+                resetUI();
+            } else {
+                updateStatus('ချိတ်ဆက်မှု အခက်အခဲဖြစ်နေသည်', '');
+            }
+        });
+    }
+
+    function startCall() {
+        const targetId = remoteInput.value.trim().toLowerCase();
+        if (!targetId) return alert('တစ်ဖက်လူ၏ ID ကို အရင်ထည့်ပါ');
+        
+        isCaller = true;
+        lastRemoteId = targetId;
+        updateStatus('ဖုန်းခေါ်ဆိုနေပါသည်...', 'calling');
+        
+        const call = peer.call(targetId, localStream, { sdpTransform: optimizeAudioSDP });
+        setupCallEvents(call);
+    }
+
+    function setupCallEvents(call) {
+        if (currentCall) currentCall.close();
+        currentCall = call;
+
+        dialPad.style.display = 'none';
+        btnEnd.style.display = 'block';
+        btnMute.style.display = 'block';
+
+        call.on('stream', (remoteStream) => {
+            remoteAudio.srcObject = remoteStream;
+            remoteAudio.play().catch(e => console.log('Audio play trigger needed'));
+            updateStatus('စကားပြောနေသည် (Low-Data Mode)', 'connected');
+            startTimer();
+        });
+
+        call.on('close', () => {
+            updateStatus('ဖုန်းကျသွားပါပြီ', '');
+            resetUI();
+        });
+
+        // Monitor ICE connection state for auto-reconnect on weak signal
+        if (call.peerConnection) {
+            call.peerConnection.oniceconnectionstatechange = () => {
+                const state = call.peerConnection.iceConnectionState;
+                if (state === 'disconnected' || state === 'failed') {
+                    updateStatus('လိုင်းမကောင်းပါ... ပြန်ချိတ်နေသည်', 'calling');
+                    if (isCaller && lastRemoteId) {
+                        setTimeout(() => {
+                            if (currentCall) startCall();
+                        }, 2500);
+                    }
+                } else if (state === 'connected') {
+                    updateStatus('စကားပြောနေသည် (Low-Data Mode)', 'connected');
+                }
+            };
+        }
+    }
+
+    function endCall() {
+        isCaller = false;
+        lastRemoteId = '';
+        if (currentCall) {
+            currentCall.close();
+            currentCall = null;
+        }
+        updateStatus('ဖုန်းချလိုက်ပါပြီ', '');
+        resetUI();
+    }
+
+    function toggleMute() {
+        if (!localStream) return;
+        isMuted = !isMuted;
+        localStream.getAudioTracks()[0].enabled = !isMuted;
+        btnMute.innerText = isMuted ? 'အသံပြန်ဖွင့်မည် (Unmute)' : 'အသံပိတ်မည် (Mute)';
+        btnMute.style.background = isMuted ? '#64748b' : '#f59e0b';
+    }
+
+    function resetUI() {
+        stopTimer();
+        dialPad.style.display = 'block';
+        btnEnd.style.display = 'none';
+        btnMute.style.display = 'none';
+        timerEl.style.display = 'none';
+        isMuted = false;
+        btnMute.innerText = 'အသံပိတ်မည် (Mute)';
+        btnMute.style.background = '#f59e0b';
+    }
+
+    function startTimer() {
+        stopTimer();
+        seconds = 0;
+        timerEl.style.display = 'block';
+        timerInterval = setInterval(() => {
+            seconds++;
+            const mins = String(Math.floor(seconds / 60)).padStart(2, '0');
+            const secs = String(seconds % 60).padStart(2, '0');
+            timerEl.innerText = `${mins}:${secs}`;
+        }, 1000);
+    }
+
+    function stopTimer() {
+        clearInterval(timerInterval);
+        timerEl.innerText = '00:00';
+    }
+
+    function updateStatus(text, className) {
+        statusEl.innerText = text;
+        statusEl.className = 'status ' + className;
+    }
+
+    function copyId() {
+        const idText = myIdEl.innerText;
+        navigator.clipboard.writeText(idText);
+        const btn = document.querySelector('.btn-copy');
+        btn.innerText = 'Copy ကူးပြီးပါပြီ ✓';
+        setTimeout(() => btn.innerText = 'ID ကို Copy ကူးမည်', 2000);
+    }
+
+    // Start on load
+    window.onload = initAudio;
+</script>
+
+</body>
 </html>
