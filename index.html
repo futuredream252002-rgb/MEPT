@@ -256,6 +256,15 @@
       return window.isSecureContext || location.hostname === "localhost" || location.hostname === "127.0.0.1";
     }
 
+    function getMicrophoneWithTimeout(constraints, timeoutMs = 12000) {
+      return Promise.race([
+        navigator.mediaDevices.getUserMedia(constraints),
+        new Promise((_, reject) => {
+          setTimeout(() => reject(new Error("MIC_PERMISSION_TIMEOUT")), timeoutMs);
+        })
+      ]);
+    }
+
     async function startMicrophone() {
       if (!isSecureEnough()) {
         setStatus("HTTPS မဟုတ်သဖြင့် Microphone မရပါ", "error");
@@ -271,7 +280,7 @@
           throw new Error("getUserMedia is not supported");
         }
 
-        localStream = await navigator.mediaDevices.getUserMedia({
+        localStream = await getMicrophoneWithTimeout({
           audio: {
             echoCancellation: true,
             noiseSuppression: true,
@@ -300,8 +309,16 @@
       } catch (error) {
         console.error("Microphone error:", error);
         startBtn.disabled = false;
-        setStatus("Microphone ဖွင့်၍မရပါ", "error");
-        alert("Browser နှင့် ဖုန်း Settings နှစ်နေရာလုံးတွင် Microphone Permission ကို Allow လုပ်ပြီး ပြန်စမ်းပါ။");
+        if (error.message === "MIC_PERMISSION_TIMEOUT") {
+          setStatus("Permission မပေါ်ပါ။ Settings မှ Allow လုပ်ပါ", "error");
+          alert("Microphone ခွင့်ပြုချက်စာ မပေါ်ပါက ဖုန်း Settings → Privacy & Security → Microphone → Chrome ကို ON လုပ်ပြီး ဒီစာမျက်နှာကို Reload လုပ်ပါ။");
+        } else if (error.name === "NotAllowedError" || error.name === "PermissionDeniedError") {
+          setStatus("Microphone Permission ပိတ်ထားသည်", "error");
+          alert("ဒီ Website အတွက် Microphone Permission ကို Allow လုပ်ပြီး ပြန်စမ်းပါ။");
+        } else {
+          setStatus("Microphone ဖွင့်၍မရပါ", "error");
+          alert("Browser နှင့် ဖုန်း Settings နှစ်နေရာလုံးတွင် Microphone Permission ကို Allow လုပ်ပြီး ပြန်စမ်းပါ။");
+        }
       }
     }
 
