@@ -131,7 +131,6 @@
 
     .call-controls { display: none; }
 
-    /* display:none မသုံးပါ။ Mobile Browser တချို့က hidden audio ကို မဖွင့်ပါ။ */
     #remote-audio {
       position: fixed;
       left: -10px;
@@ -171,7 +170,6 @@
 
     <div id="timer" class="timer">00:00</div>
 
-    <!-- Audio ကို display:none မလုပ်ထားပါ -->
     <audio id="remote-audio" autoplay playsinline webkit-playsinline></audio>
 
     <section id="call-controls" class="call-controls">
@@ -214,8 +212,10 @@
     const callControls = $("call-controls");
     const remoteAudio = $("remote-audio");
 
-    // Demo အတွက် public STUN/TURN server များ။ Production တွင် ကိုယ်ပိုင် TURN server သုံးပါ။
     const peerOptions = {
+      host: "0.peerjs.com",
+      port: 443,
+      secure: true,
       debug: 1,
       config: {
         iceServers: [
@@ -228,11 +228,6 @@
           },
           {
             urls: "turn:openrelay.metered.ca:443",
-            username: "openrelayproject",
-            credential: "openrelayproject"
-          },
-          {
-            urls: "turns:openrelay.metered.ca:443?transport=tcp",
             username: "openrelayproject",
             credential: "openrelayproject"
           }
@@ -273,7 +268,7 @@
       }
 
       startBtn.disabled = true;
-      setStatus("Microphone ခွင့်ပြုချက် စောင့်နေသည်...", "calling");
+      setStatus("Microphone ခွင့်ပြုချက် ရယူနေသည်...", "calling");
 
       try {
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -294,12 +289,13 @@
         if (!track) throw new Error("No microphone track");
         track.enabled = true;
 
-        // User gesture အတွင်း Audio ကို unlock လုပ်ရန်
         remoteAudio.muted = false;
         remoteAudio.volume = 1.0;
         try { await remoteAudio.play(); } catch (_) {}
 
+        setStatus("ဆာဗာသို့ ချိတ်ဆက်နေသည်...", "calling");
         await createPeer();
+        
         isReady = true;
         startBtn.style.display = "none";
         idBox.style.display = "block";
@@ -307,17 +303,16 @@
         setButtonsEnabled(true);
         setStatus("Online ဖြစ်ပါပြီ", "ready");
       } catch (error) {
-        console.error("Microphone error:", error);
+        console.error("Initialization error:", error);
         startBtn.disabled = false;
-        if (error.message === "MIC_PERMISSION_TIMEOUT") {
-          setStatus("Permission မပေါ်ပါ။ Settings မှ Allow လုပ်ပါ", "error");
-          alert("Microphone ခွင့်ပြုချက်စာ မပေါ်ပါက ဖုန်း Settings → Privacy & Security → Microphone → Chrome ကို ON လုပ်ပြီး ဒီစာမျက်နှာကို Reload လုပ်ပါ။");
+        if (error.message === "MIC_PERMISSION_TIMEOUT" || error.message === "PEER_SERVER_TIMEOUT") {
+          setStatus("ချိတ်ဆက်မှု အချိန်ကုန်သွားပါပြီ (Timeout)", "error");
+          alert("ဆာဗာချိတ်ဆက်မှု နှေးကွေးနေပါသည်။ ခလုတ်ကို ထပ်နှိပ်ပြီး ပြန်စမ်းပါ။");
         } else if (error.name === "NotAllowedError" || error.name === "PermissionDeniedError") {
           setStatus("Microphone Permission ပိတ်ထားသည်", "error");
           alert("ဒီ Website အတွက် Microphone Permission ကို Allow လုပ်ပြီး ပြန်စမ်းပါ။");
         } else {
-          setStatus("Microphone ဖွင့်၍မရပါ", "error");
-          alert("Browser နှင့် ဖုန်း Settings နှစ်နေရာလုံးတွင် Microphone Permission ကို Allow လုပ်ပြီး ပြန်စမ်းပါ။");
+          setStatus("ချိတ်ဆက်၍ မရပါ။ ပြန်ကြိုးစားပါ", "error");
         }
       }
     }
@@ -325,11 +320,16 @@
     function createPeer() {
       return new Promise((resolve, reject) => {
         const shortId = "love-" + Math.floor(1000 + Math.random() * 9000);
+        
+        let isResolved = false;
         peer = new Peer(shortId, peerOptions);
 
         peer.on("open", (id) => {
-          myIdEl.textContent = id;
-          resolve();
+          if (!isResolved) {
+            isResolved = true;
+            myIdEl.textContent = id;
+            resolve();
+          }
         });
 
         peer.on("call", (incomingCall) => {
@@ -355,9 +355,13 @@
 
         peer.on("error", (error) => {
           console.error("PeerJS error:", error);
+          if (!isResolved) {
+            isResolved = true;
+            reject(error);
+            return;
+          }
           if (error.type === "peer-unavailable") {
             setStatus("တစ်ဖက်လူ Online မရှိပါ", "error");
-            alert("တစ်ဖက်လူ၏ ID မှန်/Online ဖြစ်မဖြစ် စစ်ပါ။");
           } else if (error.type === "unavailable-id") {
             setStatus("ID ထပ်နေပါသည်။ ပြန်စတင်ပါ", "error");
           } else {
@@ -365,9 +369,14 @@
           }
         });
 
+        // 10 စက္ကန့်အတွင်း ဆာဗာမချိတ်နိုင်လျှင် timeout ပေးရန်
         setTimeout(() => {
-          if (!peer || !peer.open) reject(new Error("Peer server timeout"));
-        }, 15000);
+          if (!isResolved) {
+            isResolved = true;
+            if (peer) peer.destroy();
+            reject(new Error("PEER_SERVER_TIMEOUT"));
+          }
+        }, 10000);
       });
     }
 
@@ -400,8 +409,6 @@
       showCallUI();
 
       call.on("stream", async (remoteStream) => {
-        console.log("Remote stream received", remoteStream);
-
         const audioTracks = remoteStream.getAudioTracks();
         if (!audioTracks.length) {
           setStatus("တစ်ဖက်တွင် Microphone အသံမရှိပါ", "error");
@@ -439,13 +446,11 @@
         cleanupCall();
       });
 
-      // PeerJS က peerConnection တည်ဆောက်ပြီးနောက် ICE state ကိုစောင့်ကြည့်ပါ။
       setTimeout(() => {
         const pc = call.peerConnection;
         if (!pc) return;
         pc.oniceconnectionstatechange = () => {
           const state = pc.iceConnectionState;
-          console.log("ICE state:", state);
           if (state === "failed") {
             setStatus("Network မကောင်းသဖြင့် Call မချိတ်နိုင်ပါ", "error");
           } else if (state === "connected" || state === "completed") {
@@ -556,7 +561,6 @@
       if (event.key === "Enter") startCall();
     });
 
-    // စတင်ချိန်တွင် Call ခလုတ်များ ပိတ်ထားမည်။ Permission ကို Webapp ခလုတ်မှ တောင်းမည်။
     setButtonsEnabled(false);
   </script>
 </body>
