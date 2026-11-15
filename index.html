@@ -2,7 +2,7 @@
 <html lang="my">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Private Voice Call</title>
     <!-- PeerJS CDN -->
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
@@ -17,6 +17,7 @@
             min-height: 100vh;
             margin: 0;
             padding: 16px;
+            overflow: hidden; /* ဖုန်းမှာ Scroll မဖြစ်စေရန် */
         }
         .card {
             background: #1e293b;
@@ -26,6 +27,7 @@
             max-width: 380px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.4);
             text-align: center;
+            position: relative;
         }
         h2 { margin-top: 0; color: #38bdf8; font-size: 22px; }
         .status {
@@ -36,6 +38,7 @@
             margin-bottom: 20px;
             display: inline-block;
             color: #e2e8f0;
+            transition: 0.3s;
         }
         .status.connected { background: #065f46; color: #6ee7b7; }
         .status.calling { background: #854d0e; color: #fde047; }
@@ -58,6 +61,7 @@
             cursor: pointer;
             transition: 0.2s;
             margin-top: 10px;
+            -webkit-tap-highlight-color: transparent;
         }
         .btn-copy { background: #334155; color: #fff; font-size: 13px; padding: 8px; margin-top: 8px; }
         .btn-copy:active { background: #475569; }
@@ -74,12 +78,31 @@
         }
         input:focus { outline: none; border-color: #38bdf8; }
         .btn-call { background: #10b981; color: #fff; }
-        .btn-call:hover { background: #059669; }
+        .btn-call:active { background: #059669; }
         .btn-end { background: #ef4444; color: #fff; display: none; }
+        .btn-end:active { background: #dc2626; }
         .btn-mute { background: #f59e0b; color: #fff; display: none; }
+        .btn-mute:active { background: #d97706; }
         .timer { font-size: 24px; font-weight: bold; margin: 15px 0; color: #38bdf8; display: none; }
-        .audio-container { margin: 15px 0; display: none; text-align: left; }
-        audio { width: 100%; border-radius: 8px; background: #0f172a; }
+        
+        .audio-container { margin: 15px 0; display: none; }
+        audio { width: 100%; border-radius: 8px; background: #0f172a; display: none; }
+
+        /* အသံမကြားရင် နှိပ်ရန် ခလုတ် */
+        .unmute-btn {
+            display: none;
+            background: #38bdf8;
+            color: #0f172a;
+            font-size: 14px;
+            padding: 10px;
+            margin-bottom: 10px;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
     </style>
 </head>
 <body>
@@ -88,7 +111,7 @@
     <h2>Private Call</h2>
     <div id="status" class="status">ချိတ်ဆက်နေသည်...</div>
 
-    <div class="id-box">
+    <div class="id-box" id="id-box">
         <div class="id-label">သင်၏ Call ID (တစ်ဖက်လူသို့ ပို့ပေးပါ)</div>
         <div id="my-id" class="my-id">...</div>
         <button class="btn-copy" onclick="copyId()">ID ကို Copy ကူးမည်</button>
@@ -101,10 +124,10 @@
 
     <div id="timer" class="timer">00:00</div>
 
-    <!-- Visible Audio Player with Controls (Autoplay Fix) -->
-    <div id="audio-container" class="audio-container">
-        <div style="font-size: 12px; color: #38bdf8; margin-bottom: 5px; text-align: center;">တစ်ဖက်လူ၏အသံ (မကြားရပါက Play နှိပ်ပါ)</div>
-        <audio id="remote-audio" controls autoplay playsinline></audio>
+    <!-- အသံအတွက် Audio Tag (Hidden) -->
+    <div class="audio-container" id="audio-container">
+        <audio id="remote-audio" autoplay playsinline webkit-playsinline></audio>
+        <button class="unmute-btn" id="unmute-btn" onclick="forcePlayAudio()">🔊 အသံမကြားရင် ဒီနေရာနှိပ်ပါ</button>
     </div>
 
     <button id="btn-mute" class="btn-mute" onclick="toggleMute()">အသံပိတ်မည် (Mute)</button>
@@ -123,6 +146,7 @@
 
     const statusEl = document.getElementById('status');
     const myIdEl = document.getElementById('my-id');
+    const idBox = document.getElementById('id-box');
     const remoteInput = document.getElementById('remote-id');
     const dialPad = document.getElementById('dial-pad');
     const btnEnd = document.getElementById('btn-end');
@@ -130,6 +154,7 @@
     const timerEl = document.getElementById('timer');
     const remoteAudio = document.getElementById('remote-audio');
     const audioContainer = document.getElementById('audio-container');
+    const unmuteBtn = document.getElementById('unmute-btn');
 
     const randomShortId = 'love-' + Math.floor(1000 + Math.random() * 9000);
 
@@ -203,6 +228,10 @@
             isCaller = false;
             lastRemoteId = call.peer;
             updateStatus('ဖုန်းဝင်နေသည်...', 'calling');
+            
+            // Audio ကို အရင် Unlock လုပ်ထားမယ်
+            unlockAudio();
+            
             call.answer(localStream, { sdpTransform: optimizeAudioSDP });
             setupCallEvents(call);
         });
@@ -231,6 +260,9 @@
         lastRemoteId = targetId;
         updateStatus('ဖုန်းခေါ်ဆိုနေပါသည်...', 'calling');
         
+        // Audio ကို အရင် Unlock လုပ်ထားမယ်
+        unlockAudio();
+
         const call = peer.call(targetId, localStream, { sdpTransform: optimizeAudioSDP });
         setupCallEvents(call);
     }
@@ -239,16 +271,28 @@
         if (currentCall) currentCall.close();
         currentCall = call;
 
+        // UI ပြောင်းလဲခြင်း
         dialPad.style.display = 'none';
+        idBox.style.display = 'none';
         btnEnd.style.display = 'block';
         btnMute.style.display = 'block';
         audioContainer.style.display = 'block';
 
         call.on('stream', (remoteStream) => {
-            remoteAudio.srcObject = remoteStream;
-            remoteAudio.play().catch(e => {
-                console.log('Autoplay blocked, use play button');
+            console.log("Remote Stream Received:", remoteStream);
+            
+            // iOS အတွက် အသံသီးသန့် ဖြတ်ထုတ်ခြင်း
+            const audioOnlyStream = new MediaStream(remoteStream.getAudioTracks());
+            remoteAudio.srcObject = audioOnlyStream;
+            
+            // ချက်ချင်း Play လုပ်ရန် ကြိုးစားမယ်
+            remoteAudio.play().then(() => {
+                unmuteBtn.style.display = 'none';
+            }).catch(e => {
+                console.log('Autoplay blocked, showing button');
+                unmuteBtn.style.display = 'block'; // မရရင် ခလုတ်ပြမယ်
             });
+            
             updateStatus('စကားပြောနေသည် (Low-Data Mode)', 'connected');
             startTimer();
         });
@@ -275,6 +319,20 @@
         }
     }
 
+    // Audio ကို လော့ခ်ဖွင့်ပေးသည့် Function (iOS/Android အတွက်)
+    function unlockAudio() {
+        remoteAudio.play().catch(() => {});
+    }
+
+    // အသံမကြားရင် နှိပ်ပေးရမယ့် Function
+    function forcePlayAudio() {
+        remoteAudio.play().then(() => {
+            unmuteBtn.style.display = 'none';
+        }).catch(e => {
+            alert('ဖုန်းရဲ့ Media Volume ကို စစ်ဆေးပါ သို့မဟုတ် နားကြပ်တပ်ကြည့်ပါ။');
+        });
+    }
+
     function endCall() {
         isCaller = false;
         lastRemoteId = '';
@@ -297,10 +355,13 @@
     function resetUI() {
         stopTimer();
         dialPad.style.display = 'block';
+        idBox.style.display = 'block';
         btnEnd.style.display = 'none';
         btnMute.style.display = 'none';
         timerEl.style.display = 'none';
         audioContainer.style.display = 'none';
+        unmuteBtn.style.display = 'none';
+        remoteAudio.srcObject = null;
         isMuted = false;
         btnMute.innerText = 'အသံပိတ်မည် (Mute)';
         btnMute.style.background = '#f59e0b';
