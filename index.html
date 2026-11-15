@@ -78,6 +78,8 @@
         .btn-end { background: #ef4444; color: #fff; display: none; }
         .btn-mute { background: #f59e0b; color: #fff; display: none; }
         .timer { font-size: 24px; font-weight: bold; margin: 15px 0; color: #38bdf8; display: none; }
+        .audio-container { margin: 15px 0; display: none; text-align: left; }
+        audio { width: 100%; border-radius: 8px; background: #0f172a; }
     </style>
 </head>
 <body>
@@ -98,11 +100,15 @@
     </div>
 
     <div id="timer" class="timer">00:00</div>
+
+    <!-- Visible Audio Player with Controls (Autoplay Fix) -->
+    <div id="audio-container" class="audio-container">
+        <div style="font-size: 12px; color: #38bdf8; margin-bottom: 5px; text-align: center;">တစ်ဖက်လူ၏အသံ (မကြားရပါက Play နှိပ်ပါ)</div>
+        <audio id="remote-audio" controls autoplay playsinline></audio>
+    </div>
+
     <button id="btn-mute" class="btn-mute" onclick="toggleMute()">အသံပိတ်မည် (Mute)</button>
     <button id="btn-end" class="btn-end" onclick="endCall()">ဖုန်းချမည် (End Call)</button>
-
-    <!-- Hidden Audio Element -->
-    <audio id="remote-audio" autoplay playsinline></audio>
 </div>
 
 <script>
@@ -123,11 +129,10 @@
     const btnMute = document.getElementById('btn-mute');
     const timerEl = document.getElementById('timer');
     const remoteAudio = document.getElementById('remote-audio');
+    const audioContainer = document.getElementById('audio-container');
 
-    // 4-digit random short ID for easy typing
     const randomShortId = 'love-' + Math.floor(1000 + Math.random() * 9000);
 
-    // STUN + Free OpenRelay TURN Servers for cross-network stability
     const peerConfig = {
         config: {
             iceServers: [
@@ -148,7 +153,6 @@
         }
     };
 
-    // Low-bandwidth Audio Optimization (Opus 20kbps)
     function optimizeAudioSDP(sdp) {
         let lines = sdp.split('\r\n');
         let opusPayload = null;
@@ -161,7 +165,6 @@
         if (opusPayload) {
             for (let i = 0; i < lines.length; i++) {
                 if (lines[i].startsWith('a=fmtp:' + opusPayload)) {
-                    // Limit maxaveragebitrate to 20000 bps (20kbps) & enable FEC (Forward Error Correction)
                     lines[i] += ';maxaveragebitrate=20000;useinbandfec=1;usedtx=1';
                 }
             }
@@ -169,7 +172,6 @@
         return lines.join('\r\n');
     }
 
-    // Initialize Microphone with Noise Suppression
     async function initAudio() {
         try {
             localStream = await navigator.mediaDevices.getUserMedia({
@@ -184,7 +186,7 @@
             });
             initPeer();
         } catch (err) {
-            updateStatus('မိုက်ခရိုဖုန်း ဖွင့်ခွင့်မရပါ (HTTPS ဖြင့်ဖွင့်ပါ)', '');
+            updateStatus('မိုက်ခရိုဖုန်း ဖွင့်ခွင့်မရပါ', '');
             alert('Browser မှ Microphone ခွင့်ပြုချက် (Allow) ပေးရန် လိုအပ်ပါသည်။');
         }
     }
@@ -197,11 +199,10 @@
             updateStatus('အဆင်သင့်ဖြစ်ပါပြီ (Online)', '');
         });
 
-        // Incoming Call Handler (Auto-Answer for convenience, or prompt)
         peer.on('call', (call) => {
             isCaller = false;
             lastRemoteId = call.peer;
-            updateStatus('ဖုန်းဝင်နေသည်... လက်ခံချိတ်ဆက်နေပါသည်', 'calling');
+            updateStatus('ဖုန်းဝင်နေသည်...', 'calling');
             call.answer(localStream, { sdpTransform: optimizeAudioSDP });
             setupCallEvents(call);
         });
@@ -214,7 +215,7 @@
         peer.on('error', (err) => {
             console.error(err);
             if (err.type === 'peer-unavailable') {
-                updateStatus('တစ်ဖက်လူ Online မရှိပါ (ID ပြန်စစ်ပါ)', '');
+                updateStatus('တစ်ဖက်လူ Online မရှိပါ', '');
                 resetUI();
             } else {
                 updateStatus('ချိတ်ဆက်မှု အခက်အခဲဖြစ်နေသည်', '');
@@ -241,10 +242,13 @@
         dialPad.style.display = 'none';
         btnEnd.style.display = 'block';
         btnMute.style.display = 'block';
+        audioContainer.style.display = 'block';
 
         call.on('stream', (remoteStream) => {
             remoteAudio.srcObject = remoteStream;
-            remoteAudio.play().catch(e => console.log('Audio play trigger needed'));
+            remoteAudio.play().catch(e => {
+                console.log('Autoplay blocked, use play button');
+            });
             updateStatus('စကားပြောနေသည် (Low-Data Mode)', 'connected');
             startTimer();
         });
@@ -254,7 +258,6 @@
             resetUI();
         });
 
-        // Monitor ICE connection state for auto-reconnect on weak signal
         if (call.peerConnection) {
             call.peerConnection.oniceconnectionstatechange = () => {
                 const state = call.peerConnection.iceConnectionState;
@@ -297,6 +300,7 @@
         btnEnd.style.display = 'none';
         btnMute.style.display = 'none';
         timerEl.style.display = 'none';
+        audioContainer.style.display = 'none';
         isMuted = false;
         btnMute.innerText = 'အသံပိတ်မည် (Mute)';
         btnMute.style.background = '#f59e0b';
@@ -332,7 +336,6 @@
         setTimeout(() => btn.innerText = 'ID ကို Copy ကူးမည်', 2000);
     }
 
-    // Start on load
     window.onload = initAudio;
 </script>
 
