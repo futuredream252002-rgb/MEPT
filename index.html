@@ -1,404 +1,546 @@
 <!DOCTYPE html>
 <html lang="my">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Private Voice Call</title>
-    <!-- PeerJS CDN -->
-    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
-    <style>
-        * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        body {
-            background: #0f172a;
-            color: #f8fafc;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            padding: 16px;
-            overflow: hidden; /* ဖုန်းမှာ Scroll မဖြစ်စေရန် */
-        }
-        .card {
-            background: #1e293b;
-            padding: 28px 24px;
-            border-radius: 20px;
-            width: 100%;
-            max-width: 380px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.4);
-            text-align: center;
-            position: relative;
-        }
-        h2 { margin-top: 0; color: #38bdf8; font-size: 22px; }
-        .status {
-            background: #334155;
-            padding: 8px 14px;
-            border-radius: 12px;
-            font-size: 14px;
-            margin-bottom: 20px;
-            display: inline-block;
-            color: #e2e8f0;
-            transition: 0.3s;
-        }
-        .status.connected { background: #065f46; color: #6ee7b7; }
-        .status.calling { background: #854d0e; color: #fde047; }
-        .id-box {
-            background: #0f172a;
-            padding: 12px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            border: 1px solid #334155;
-        }
-        .id-label { font-size: 12px; color: #94a3b8; margin-bottom: 4px; }
-        .my-id { font-size: 18px; font-weight: bold; color: #f472b6; letter-spacing: 1px; user-select: all; }
-        button {
-            width: 100%;
-            padding: 13px;
-            border: none;
-            border-radius: 12px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: 0.2s;
-            margin-top: 10px;
-            -webkit-tap-highlight-color: transparent;
-        }
-        .btn-copy { background: #334155; color: #fff; font-size: 13px; padding: 8px; margin-top: 8px; }
-        .btn-copy:active { background: #475569; }
-        input {
-            width: 100%;
-            padding: 13px;
-            border-radius: 12px;
-            border: 1px solid #475569;
-            background: #0f172a;
-            color: #fff;
-            font-size: 16px;
-            text-align: center;
-            margin-bottom: 8px;
-        }
-        input:focus { outline: none; border-color: #38bdf8; }
-        .btn-call { background: #10b981; color: #fff; }
-        .btn-call:active { background: #059669; }
-        .btn-end { background: #ef4444; color: #fff; display: none; }
-        .btn-end:active { background: #dc2626; }
-        .btn-mute { background: #f59e0b; color: #fff; display: none; }
-        .btn-mute:active { background: #d97706; }
-        .timer { font-size: 24px; font-weight: bold; margin: 15px 0; color: #38bdf8; display: none; }
-        
-        .audio-container { margin: 15px 0; display: none; }
-        audio { width: 100%; border-radius: 8px; background: #0f172a; display: none; }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#0f172a" />
+  <title>Private Voice Call</title>
 
-        /* အသံမကြားရင် နှိပ်ရန် ခလုတ် */
-        .unmute-btn {
-            display: none;
-            background: #38bdf8;
-            color: #0f172a;
-            font-size: 14px;
-            padding: 10px;
-            margin-bottom: 10px;
-            animation: pulse 1.5s infinite;
-        }
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
-    </style>
+  <!-- PeerJS -->
+  <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #0f172a;
+      color: #f8fafc;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 400px;
+      padding: 24px 20px;
+      border-radius: 20px;
+      background: #1e293b;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, .35);
+      text-align: center;
+    }
+
+    h1 {
+      margin: 0 0 12px;
+      color: #38bdf8;
+      font-size: 24px;
+    }
+
+    .status {
+      display: inline-block;
+      margin-bottom: 18px;
+      padding: 8px 13px;
+      border-radius: 999px;
+      background: #334155;
+      color: #e2e8f0;
+      font-size: 14px;
+    }
+
+    .status.ready { background: #075985; color: #bae6fd; }
+    .status.calling { background: #854d0e; color: #fef08a; }
+    .status.connected { background: #065f46; color: #a7f3d0; }
+    .status.error { background: #991b1b; color: #fecaca; }
+
+    .box {
+      margin: 12px 0;
+      padding: 14px;
+      border: 1px solid #334155;
+      border-radius: 14px;
+      background: #0f172a;
+    }
+
+    .label {
+      margin-bottom: 6px;
+      color: #94a3b8;
+      font-size: 12px;
+    }
+
+    .my-id {
+      min-height: 24px;
+      color: #f472b6;
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      user-select: all;
+      word-break: break-all;
+    }
+
+    input, button {
+      width: 100%;
+      border: 0;
+      border-radius: 12px;
+      font: inherit;
+    }
+
+    input {
+      margin: 8px 0;
+      padding: 13px;
+      border: 1px solid #475569;
+      outline: none;
+      background: #0f172a;
+      color: #fff;
+      text-align: center;
+      font-size: 16px;
+    }
+
+    input:focus { border-color: #38bdf8; }
+
+    button {
+      margin-top: 9px;
+      padding: 13px;
+      color: #fff;
+      cursor: pointer;
+      font-weight: 700;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: .45;
+    }
+
+    .btn-start { background: #2563eb; }
+    .btn-copy { background: #475569; padding: 9px; font-size: 13px; }
+    .btn-call { background: #10b981; }
+    .btn-mute { background: #f59e0b; }
+    .btn-unmute { background: #38bdf8; color: #082f49; }
+    .btn-end { background: #ef4444; }
+
+    .timer {
+      display: none;
+      margin: 14px 0 4px;
+      color: #38bdf8;
+      font-size: 24px;
+      font-weight: 700;
+    }
+
+    .call-controls { display: none; }
+
+    /* display:none မသုံးပါ။ Mobile Browser တချို့က hidden audio ကို မဖွင့်ပါ။ */
+    #remote-audio {
+      position: fixed;
+      left: -10px;
+      bottom: -10px;
+      width: 2px;
+      height: 2px;
+      opacity: .01;
+      pointer-events: none;
+    }
+
+    .hint {
+      margin: 14px 0 0;
+      color: #94a3b8;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+  </style>
 </head>
 <body>
+  <main class="card">
+    <h1>Private Voice Call</h1>
+    <div id="status" class="status">အသံစနစ် စတင်ရန်လိုပါသည်</div>
 
-<div class="card">
-    <h2>Private Call</h2>
-    <div id="status" class="status">ချိတ်ဆက်နေသည်...</div>
+    <button id="btn-start" class="btn-start">Microphone စတင်မည်</button>
 
-    <div class="id-box" id="id-box">
-        <div class="id-label">သင်၏ Call ID (တစ်ဖက်လူသို့ ပို့ပေးပါ)</div>
-        <div id="my-id" class="my-id">...</div>
-        <button class="btn-copy" onclick="copyId()">ID ကို Copy ကူးမည်</button>
-    </div>
+    <section id="id-box" class="box" style="display:none;">
+      <div class="label">သင်၏ Call ID ကို တစ်ဖက်လူထံ ပို့ပါ</div>
+      <div id="my-id" class="my-id">...</div>
+      <button id="btn-copy" class="btn-copy">ID ကို Copy ကူးမည်</button>
+    </section>
 
-    <div id="dial-pad">
-        <input type="text" id="remote-id" placeholder="တစ်ဖက်လူ၏ ID ကိုရိုက်ထည့်ပါ">
-        <button class="btn-call" onclick="startCall()">ဖုန်းခေါ်မည် (Call)</button>
-    </div>
+    <section id="dial-box" class="box" style="display:none;">
+      <div class="label">တစ်ဖက်လူ၏ Call ID</div>
+      <input id="remote-id" type="text" inputmode="text" autocomplete="off" placeholder="ဥပမာ love-1234" />
+      <button id="btn-call" class="btn-call">ဖုန်းခေါ်မည်</button>
+    </section>
 
     <div id="timer" class="timer">00:00</div>
 
-    <!-- အသံအတွက် Audio Tag (Hidden) -->
-    <div class="audio-container" id="audio-container">
-        <audio id="remote-audio" autoplay playsinline webkit-playsinline></audio>
-        <button class="unmute-btn" id="unmute-btn" onclick="forcePlayAudio()">🔊 အသံမကြားရင် ဒီနေရာနှိပ်ပါ</button>
-    </div>
+    <!-- Audio ကို display:none မလုပ်ထားပါ -->
+    <audio id="remote-audio" autoplay playsinline webkit-playsinline></audio>
 
-    <button id="btn-mute" class="btn-mute" onclick="toggleMute()">အသံပိတ်မည် (Mute)</button>
-    <button id="btn-end" class="btn-end" onclick="endCall()">ဖုန်းချမည် (End Call)</button>
-</div>
+    <section id="call-controls" class="call-controls">
+      <button id="btn-unmute" class="btn-unmute">🔊 အသံကြားရန် ဒီနေရာကို နှိပ်ပါ</button>
+      <button id="btn-mute" class="btn-mute">အသံပိတ်မည် (Mute)</button>
+      <button id="btn-end" class="btn-end">ဖုန်းချမည်</button>
+    </section>
 
-<script>
-    let peer;
-    let localStream;
-    let currentCall;
-    let isMuted = false;
-    let timerInterval;
+    <p class="hint">
+      နှစ်ဖက်လုံးက Microphone ခွင့်ပြုချက်ကို Allow လုပ်ထားပြီး<br />
+      ဖုန်း Media Volume ကို မြှင့်ထားပါ။
+    </p>
+  </main>
+
+  <script>
+    "use strict";
+
+    let peer = null;
+    let localStream = null;
+    let currentCall = null;
+    let timerInterval = null;
     let seconds = 0;
-    let lastRemoteId = '';
-    let isCaller = false;
+    let isMuted = false;
+    let isReady = false;
 
-    const statusEl = document.getElementById('status');
-    const myIdEl = document.getElementById('my-id');
-    const idBox = document.getElementById('id-box');
-    const remoteInput = document.getElementById('remote-id');
-    const dialPad = document.getElementById('dial-pad');
-    const btnEnd = document.getElementById('btn-end');
-    const btnMute = document.getElementById('btn-mute');
-    const timerEl = document.getElementById('timer');
-    const remoteAudio = document.getElementById('remote-audio');
-    const audioContainer = document.getElementById('audio-container');
-    const unmuteBtn = document.getElementById('unmute-btn');
+    const $ = (id) => document.getElementById(id);
 
-    const randomShortId = 'love-' + Math.floor(1000 + Math.random() * 9000);
+    const statusEl = $("status");
+    const startBtn = $("btn-start");
+    const copyBtn = $("btn-copy");
+    const callBtn = $("btn-call");
+    const endBtn = $("btn-end");
+    const muteBtn = $("btn-mute");
+    const unmuteBtn = $("btn-unmute");
+    const idBox = $("id-box");
+    const dialBox = $("dial-box");
+    const myIdEl = $("my-id");
+    const remoteIdInput = $("remote-id");
+    const timerEl = $("timer");
+    const callControls = $("call-controls");
+    const remoteAudio = $("remote-audio");
 
-    const peerConfig = {
-        config: {
-            iceServers: [
-                { urls: 'stun:stun.l.google.com:19302' },
-                { urls: 'stun:stun1.l.google.com:19302' },
-                {
-                    urls: 'turn:openrelay.metered.ca:80',
-                    username: 'openrelayproject',
-                    credential: 'openrelayproject'
-                },
-                {
-                    urls: 'turn:openrelay.metered.ca:443',
-                    username: 'openrelayproject',
-                    credential: 'openrelayproject'
-                }
-            ],
-            sdpSemantics: 'unified-plan'
-        }
+    // Demo အတွက် public STUN/TURN server များ။ Production တွင် ကိုယ်ပိုင် TURN server သုံးပါ။
+    const peerOptions = {
+      debug: 1,
+      config: {
+        iceServers: [
+          { urls: "stun:stun.l.google.com:19302" },
+          { urls: "stun:stun1.l.google.com:19302" },
+          {
+            urls: "turn:openrelay.metered.ca:80",
+            username: "openrelayproject",
+            credential: "openrelayproject"
+          },
+          {
+            urls: "turn:openrelay.metered.ca:443",
+            username: "openrelayproject",
+            credential: "openrelayproject"
+          },
+          {
+            urls: "turns:openrelay.metered.ca:443?transport=tcp",
+            username: "openrelayproject",
+            credential: "openrelayproject"
+          }
+        ],
+        sdpSemantics: "unified-plan"
+      }
     };
 
-    function optimizeAudioSDP(sdp) {
-        let lines = sdp.split('\r\n');
-        let opusPayload = null;
-        for (let i = 0; i < lines.length; i++) {
-            if (lines[i].includes('opus/48000')) {
-                opusPayload = lines[i].split(':')[1].split(' ')[0];
-                break;
-            }
-        }
-        if (opusPayload) {
-            for (let i = 0; i < lines.length; i++) {
-                if (lines[i].startsWith('a=fmtp:' + opusPayload)) {
-                    lines[i] += ';maxaveragebitrate=20000;useinbandfec=1;usedtx=1';
-                }
-            }
-        }
-        return lines.join('\r\n');
+    function setStatus(text, type = "") {
+      statusEl.textContent = text;
+      statusEl.className = "status " + type;
     }
 
-    async function initAudio() {
-        try {
-            localStream = await navigator.mediaDevices.getUserMedia({
-                audio: {
-                    echoCancellation: true,
-                    noiseSuppression: true,
-                    autoGainControl: true,
-                    sampleRate: 16000,
-                    channelCount: 1
-                },
-                video: false
-            });
-            initPeer();
-        } catch (err) {
-            updateStatus('မိုက်ခရိုဖုန်း ဖွင့်ခွင့်မရပါ', '');
-            alert('Browser မှ Microphone ခွင့်ပြုချက် (Allow) ပေးရန် လိုအပ်ပါသည်။');
-        }
+    function setButtonsEnabled(enabled) {
+      callBtn.disabled = !enabled;
+      copyBtn.disabled = !enabled;
+      remoteIdInput.disabled = !enabled;
     }
 
-    function initPeer() {
-        peer = new Peer(randomShortId, peerConfig);
+    function isSecureEnough() {
+      return window.isSecureContext || location.hostname === "localhost" || location.hostname === "127.0.0.1";
+    }
 
-        peer.on('open', (id) => {
-            myIdEl.innerText = id;
-            updateStatus('အဆင်သင့်ဖြစ်ပါပြီ (Online)', '');
+    async function startMicrophone() {
+      if (!isSecureEnough()) {
+        setStatus("HTTPS မဟုတ်သဖြင့် Microphone မရပါ", "error");
+        alert("ဒီ Website ကို HTTPS ဖြင့် ဖွင့်ပါ။ localhost ဖြစ်ရင် HTTP သုံးနိုင်ပါတယ်။");
+        return;
+      }
+
+      startBtn.disabled = true;
+      setStatus("Microphone ခွင့်ပြုချက် စောင့်နေသည်...", "calling");
+
+      try {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          throw new Error("getUserMedia is not supported");
+        }
+
+        localStream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true,
+            channelCount: 1
+          },
+          video: false
         });
 
-        peer.on('call', (call) => {
-            isCaller = false;
-            lastRemoteId = call.peer;
-            updateStatus('ဖုန်းဝင်နေသည်...', 'calling');
-            
-            // Audio ကို အရင် Unlock လုပ်ထားမယ်
-            unlockAudio();
-            
-            call.answer(localStream, { sdpTransform: optimizeAudioSDP });
-            setupCallEvents(call);
+        const track = localStream.getAudioTracks()[0];
+        if (!track) throw new Error("No microphone track");
+        track.enabled = true;
+
+        // User gesture အတွင်း Audio ကို unlock လုပ်ရန်
+        remoteAudio.muted = false;
+        remoteAudio.volume = 1.0;
+        try { await remoteAudio.play(); } catch (_) {}
+
+        await createPeer();
+        isReady = true;
+        startBtn.style.display = "none";
+        idBox.style.display = "block";
+        dialBox.style.display = "block";
+        setButtonsEnabled(true);
+        setStatus("Online ဖြစ်ပါပြီ", "ready");
+      } catch (error) {
+        console.error("Microphone error:", error);
+        startBtn.disabled = false;
+        setStatus("Microphone ဖွင့်၍မရပါ", "error");
+        alert("Browser နှင့် ဖုန်း Settings နှစ်နေရာလုံးတွင် Microphone Permission ကို Allow လုပ်ပြီး ပြန်စမ်းပါ။");
+      }
+    }
+
+    function createPeer() {
+      return new Promise((resolve, reject) => {
+        const shortId = "love-" + Math.floor(1000 + Math.random() * 9000);
+        peer = new Peer(shortId, peerOptions);
+
+        peer.on("open", (id) => {
+          myIdEl.textContent = id;
+          resolve();
         });
 
-        peer.on('disconnected', () => {
-            updateStatus('လိုင်းပြတ်သွားပါသည်... ပြန်ချိတ်နေသည်', 'calling');
-            peer.reconnect();
+        peer.on("call", (incomingCall) => {
+          if (!isReady || !localStream) {
+            incomingCall.close();
+            return;
+          }
+
+          if (currentCall) currentCall.close();
+          setStatus("ဖုန်းဝင်နေသည်...", "calling");
+          incomingCall.answer(localStream);
+          setupCall(incomingCall);
         });
 
-        peer.on('error', (err) => {
-            console.error(err);
-            if (err.type === 'peer-unavailable') {
-                updateStatus('တစ်ဖက်လူ Online မရှိပါ', '');
-                resetUI();
-            } else {
-                updateStatus('ချိတ်ဆက်မှု အခက်အခဲဖြစ်နေသည်', '');
-            }
+        peer.on("disconnected", () => {
+          setStatus("Server နှင့် ပြတ်သွားပါသည်... ပြန်ချိတ်နေသည်", "calling");
+          if (peer && !peer.destroyed) peer.reconnect();
         });
+
+        peer.on("close", () => {
+          setStatus("Connection ပိတ်သွားပါပြီ", "error");
+        });
+
+        peer.on("error", (error) => {
+          console.error("PeerJS error:", error);
+          if (error.type === "peer-unavailable") {
+            setStatus("တစ်ဖက်လူ Online မရှိပါ", "error");
+            alert("တစ်ဖက်လူ၏ ID မှန်/Online ဖြစ်မဖြစ် စစ်ပါ။");
+          } else if (error.type === "unavailable-id") {
+            setStatus("ID ထပ်နေပါသည်။ ပြန်စတင်ပါ", "error");
+          } else {
+            setStatus("ချိတ်ဆက်မှု အခက်အခဲ ဖြစ်နေသည်", "error");
+          }
+        });
+
+        setTimeout(() => {
+          if (!peer || !peer.open) reject(new Error("Peer server timeout"));
+        }, 15000);
+      });
     }
 
     function startCall() {
-        const targetId = remoteInput.value.trim().toLowerCase();
-        if (!targetId) return alert('တစ်ဖက်လူ၏ ID ကို အရင်ထည့်ပါ');
-        
-        isCaller = true;
-        lastRemoteId = targetId;
-        updateStatus('ဖုန်းခေါ်ဆိုနေပါသည်...', 'calling');
-        
-        // Audio ကို အရင် Unlock လုပ်ထားမယ်
-        unlockAudio();
+      if (!isReady || !peer || !localStream) {
+        alert("အရင်ဆုံး Microphone စတင်ပါ။");
+        return;
+      }
 
-        const call = peer.call(targetId, localStream, { sdpTransform: optimizeAudioSDP });
-        setupCallEvents(call);
+      const targetId = remoteIdInput.value.trim().toLowerCase();
+      if (!targetId) {
+        alert("တစ်ဖက်လူ၏ Call ID ကို ထည့်ပါ။");
+        remoteIdInput.focus();
+        return;
+      }
+
+      if (targetId === myIdEl.textContent.toLowerCase()) {
+        alert("မိမိ၏ ID ကို မိမိထံ ပြန်မခေါ်နိုင်ပါ။");
+        return;
+      }
+
+      if (currentCall) currentCall.close();
+      setStatus("ဖုန်းခေါ်နေသည်...", "calling");
+      const outgoingCall = peer.call(targetId, localStream);
+      setupCall(outgoingCall);
     }
 
-    function setupCallEvents(call) {
-        if (currentCall) currentCall.close();
-        currentCall = call;
+    function setupCall(call) {
+      currentCall = call;
+      showCallUI();
 
-        // UI ပြောင်းလဲခြင်း
-        dialPad.style.display = 'none';
-        idBox.style.display = 'none';
-        btnEnd.style.display = 'block';
-        btnMute.style.display = 'block';
-        audioContainer.style.display = 'block';
+      call.on("stream", async (remoteStream) => {
+        console.log("Remote stream received", remoteStream);
 
-        call.on('stream', (remoteStream) => {
-            console.log("Remote Stream Received:", remoteStream);
-            
-            // iOS အတွက် အသံသီးသန့် ဖြတ်ထုတ်ခြင်း
-            const audioOnlyStream = new MediaStream(remoteStream.getAudioTracks());
-            remoteAudio.srcObject = audioOnlyStream;
-            
-            // ချက်ချင်း Play လုပ်ရန် ကြိုးစားမယ်
-            remoteAudio.play().then(() => {
-                unmuteBtn.style.display = 'none';
-            }).catch(e => {
-                console.log('Autoplay blocked, showing button');
-                unmuteBtn.style.display = 'block'; // မရရင် ခလုတ်ပြမယ်
-            });
-            
-            updateStatus('စကားပြောနေသည် (Low-Data Mode)', 'connected');
-            startTimer();
-        });
-
-        call.on('close', () => {
-            updateStatus('ဖုန်းကျသွားပါပြီ', '');
-            resetUI();
-        });
-
-        if (call.peerConnection) {
-            call.peerConnection.oniceconnectionstatechange = () => {
-                const state = call.peerConnection.iceConnectionState;
-                if (state === 'disconnected' || state === 'failed') {
-                    updateStatus('လိုင်းမကောင်းပါ... ပြန်ချိတ်နေသည်', 'calling');
-                    if (isCaller && lastRemoteId) {
-                        setTimeout(() => {
-                            if (currentCall) startCall();
-                        }, 2500);
-                    }
-                } else if (state === 'connected') {
-                    updateStatus('စကားပြောနေသည် (Low-Data Mode)', 'connected');
-                }
-            };
+        const audioTracks = remoteStream.getAudioTracks();
+        if (!audioTracks.length) {
+          setStatus("တစ်ဖက်တွင် Microphone အသံမရှိပါ", "error");
+          return;
         }
+
+        audioTracks.forEach(track => track.enabled = true);
+        remoteAudio.srcObject = new MediaStream(audioTracks);
+        remoteAudio.muted = false;
+        remoteAudio.volume = 1.0;
+
+        try {
+          await remoteAudio.play();
+          unmuteBtn.style.display = "none";
+        } catch (error) {
+          console.warn("Autoplay blocked", error);
+          unmuteBtn.style.display = "block";
+          setStatus("အသံဖွင့်ရန် အပြာရောင်ခလုတ်ကို နှိပ်ပါ", "calling");
+        }
+
+        setStatus("စကားပြောနေသည်", "connected");
+        startTimer();
+      });
+
+      call.on("close", () => {
+        if (currentCall === call) {
+          setStatus("ဖုန်းချသွားပါပြီ", "ready");
+          cleanupCall();
+        }
+      });
+
+      call.on("error", (error) => {
+        console.error("Call error:", error);
+        setStatus("Call အသံချိတ်ဆက်မှု မအောင်မြင်ပါ", "error");
+        cleanupCall();
+      });
+
+      // PeerJS က peerConnection တည်ဆောက်ပြီးနောက် ICE state ကိုစောင့်ကြည့်ပါ။
+      setTimeout(() => {
+        const pc = call.peerConnection;
+        if (!pc) return;
+        pc.oniceconnectionstatechange = () => {
+          const state = pc.iceConnectionState;
+          console.log("ICE state:", state);
+          if (state === "failed") {
+            setStatus("Network မကောင်းသဖြင့် Call မချိတ်နိုင်ပါ", "error");
+          } else if (state === "connected" || state === "completed") {
+            setStatus("စကားပြောနေသည်", "connected");
+          }
+        };
+      }, 500);
     }
 
-    // Audio ကို လော့ခ်ဖွင့်ပေးသည့် Function (iOS/Android အတွက်)
-    function unlockAudio() {
-        remoteAudio.play().catch(() => {});
+    function showCallUI() {
+      idBox.style.display = "none";
+      dialBox.style.display = "none";
+      callControls.style.display = "block";
+      endBtn.style.display = "block";
+      muteBtn.style.display = "block";
+      timerEl.style.display = "block";
     }
 
-    // အသံမကြားရင် နှိပ်ပေးရမယ့် Function
-    function forcePlayAudio() {
-        remoteAudio.play().then(() => {
-            unmuteBtn.style.display = 'none';
-        }).catch(e => {
-            alert('ဖုန်းရဲ့ Media Volume ကို စစ်ဆေးပါ သို့မဟုတ် နားကြပ်တပ်ကြည့်ပါ။');
-        });
+    function cleanupCall() {
+      stopTimer();
+      remoteAudio.pause();
+      remoteAudio.srcObject = null;
+      currentCall = null;
+      isMuted = false;
+      if (localStream) {
+        const track = localStream.getAudioTracks()[0];
+        if (track) track.enabled = true;
+      }
+      muteBtn.textContent = "အသံပိတ်မည် (Mute)";
+      muteBtn.style.background = "#f59e0b";
+      unmuteBtn.style.display = "none";
+      callControls.style.display = "none";
+      idBox.style.display = "block";
+      dialBox.style.display = "block";
+      timerEl.style.display = "none";
     }
 
     function endCall() {
-        isCaller = false;
-        lastRemoteId = '';
-        if (currentCall) {
-            currentCall.close();
-            currentCall = null;
-        }
-        updateStatus('ဖုန်းချလိုက်ပါပြီ', '');
-        resetUI();
+      if (currentCall) {
+        currentCall.close();
+        currentCall = null;
+      }
+      cleanupCall();
+      setStatus("ဖုန်းချလိုက်ပါပြီ", "ready");
+    }
+
+    async function forcePlayAudio() {
+      try {
+        remoteAudio.muted = false;
+        remoteAudio.volume = 1.0;
+        await remoteAudio.play();
+        unmuteBtn.style.display = "none";
+        setStatus("စကားပြောနေသည်", "connected");
+      } catch (error) {
+        console.error("Audio play failed:", error);
+        alert("ဖုန်း Media Volume ကို မြှင့်ပါ။ Silent Mode ပိတ်ပြီး နားကြပ်ဖြင့်လည်း စမ်းပါ။");
+      }
     }
 
     function toggleMute() {
-        if (!localStream) return;
-        isMuted = !isMuted;
-        localStream.getAudioTracks()[0].enabled = !isMuted;
-        btnMute.innerText = isMuted ? 'အသံပြန်ဖွင့်မည် (Unmute)' : 'အသံပိတ်မည် (Mute)';
-        btnMute.style.background = isMuted ? '#64748b' : '#f59e0b';
-    }
+      if (!localStream) return;
+      const track = localStream.getAudioTracks()[0];
+      if (!track) return;
 
-    function resetUI() {
-        stopTimer();
-        dialPad.style.display = 'block';
-        idBox.style.display = 'block';
-        btnEnd.style.display = 'none';
-        btnMute.style.display = 'none';
-        timerEl.style.display = 'none';
-        audioContainer.style.display = 'none';
-        unmuteBtn.style.display = 'none';
-        remoteAudio.srcObject = null;
-        isMuted = false;
-        btnMute.innerText = 'အသံပိတ်မည် (Mute)';
-        btnMute.style.background = '#f59e0b';
+      isMuted = !isMuted;
+      track.enabled = !isMuted;
+      muteBtn.textContent = isMuted ? "အသံပြန်ဖွင့်မည် (Unmute)" : "အသံပိတ်မည် (Mute)";
+      muteBtn.style.background = isMuted ? "#64748b" : "#f59e0b";
     }
 
     function startTimer() {
-        stopTimer();
-        seconds = 0;
-        timerEl.style.display = 'block';
-        timerInterval = setInterval(() => {
-            seconds++;
-            const mins = String(Math.floor(seconds / 60)).padStart(2, '0');
-            const secs = String(seconds % 60).padStart(2, '0');
-            timerEl.innerText = `${mins}:${secs}`;
-        }, 1000);
+      stopTimer();
+      seconds = 0;
+      timerEl.textContent = "00:00";
+      timerInterval = setInterval(() => {
+        seconds++;
+        const minutes = String(Math.floor(seconds / 60)).padStart(2, "0");
+        const secs = String(seconds % 60).padStart(2, "0");
+        timerEl.textContent = `${minutes}:${secs}`;
+      }, 1000);
     }
 
     function stopTimer() {
-        clearInterval(timerInterval);
-        timerEl.innerText = '00:00';
+      if (timerInterval) clearInterval(timerInterval);
+      timerInterval = null;
+      seconds = 0;
+      timerEl.textContent = "00:00";
     }
 
-    function updateStatus(text, className) {
-        statusEl.innerText = text;
-        statusEl.className = 'status ' + className;
+    async function copyMyId() {
+      const id = myIdEl.textContent;
+      try {
+        await navigator.clipboard.writeText(id);
+        copyBtn.textContent = "Copy ကူးပြီးပါပြီ ✓";
+        setTimeout(() => copyBtn.textContent = "ID ကို Copy ကူးမည်", 1800);
+      } catch (_) {
+        alert("ID: " + id);
+      }
     }
 
-    function copyId() {
-        const idText = myIdEl.innerText;
-        navigator.clipboard.writeText(idText);
-        const btn = document.querySelector('.btn-copy');
-        btn.innerText = 'Copy ကူးပြီးပါပြီ ✓';
-        setTimeout(() => btn.innerText = 'ID ကို Copy ကူးမည်', 2000);
-    }
+    startBtn.addEventListener("click", startMicrophone);
+    callBtn.addEventListener("click", startCall);
+    endBtn.addEventListener("click", endCall);
+    muteBtn.addEventListener("click", toggleMute);
+    unmuteBtn.addEventListener("click", forcePlayAudio);
+    copyBtn.addEventListener("click", copyMyId);
+    remoteIdInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") startCall();
+    });
 
-    window.onload = initAudio;
-</script>
-
+    // စတင်ချိန်တွင် Call ခလုတ်များ ပိတ်ထားမည်။
+    setButtonsEnabled(false);
+  </script>
 </body>
 </html>
