@@ -153,9 +153,9 @@
 <body>
   <main class="card">
     <h1>Private Voice Call</h1>
-    <div id="status" class="status">အသံစနစ် စတင်ရန်လိုပါသည်</div>
+    <div id="status" class="status">အောက်ပါခလုတ်ကိုနှိပ်ပြီး Microphone Permission တောင်းပါ</div>
 
-    <button id="btn-start" class="btn-start">Microphone စတင်မည်</button>
+    <button id="btn-start" class="btn-start">Microphone Permission တောင်းမည်</button>
 
     <section id="id-box" class="box" style="display:none;">
       <div class="label">သင်၏ Call ID ကို တစ်ဖက်လူထံ ပို့ပါ</div>
@@ -556,7 +556,7 @@
       if (event.key === "Enter") startCall();
     });
 
-    // စတင်ချိန်တွင် Call ခလုတ်များ ပိတ်ထားမည်။
+    // စတင်ချိန်တွင် Call ခလုတ်များ ပိတ်ထားမည်။ Permission ကို Webapp ခလုတ်မှ တောင်းမည်။
     setButtonsEnabled(false);
   </script>
 </body>
