@@ -224,8 +224,11 @@
     </div>
   </div>
 
-  <!-- Hidden Remote Audio Element with playsinline & autoplay -->
+  <!-- Hidden Remote Audio Element -->
   <audio id="remoteAudio" autoplay playsinline></audio>
+  
+  <!-- Silent Audio to Unlock Audio Context on Mobile -->
+  <audio id="silentAudio" playsinline loop></audio>
 
   <footer class="text-center text-[11px] text-gray-500 pb-1">
     End-to-End Encrypted Direct Couple Line 🔒
@@ -246,6 +249,9 @@
     let ringtoneInterval = null;
     let audioCtx = null;
 
+    const remoteAudio = document.getElementById('remoteAudio');
+    const silentAudio = document.getElementById('silentAudio');
+
     const urlRole = new URLSearchParams(window.location.search).get('role');
     if (urlRole === 'boy' || urlRole === 'girl') {
       myRole = urlRole;
@@ -253,6 +259,23 @@
     }
     localStorage.setItem('couple_room', roomCode);
     document.getElementById('roomInput').value = roomCode;
+
+    // Audio Unlock mechanism for iOS/Safari
+    function unlockAudio() {
+      if (!silentAudio.src) {
+        // 1-second silent base64 wav
+        silentAudio.src = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA';
+      }
+      silentAudio.play().catch(() => {});
+      
+      if (remoteAudio.paused) {
+        remoteAudio.play().catch(() => {});
+      }
+    }
+
+    // Call this on any user interaction to unlock audio
+    document.body.addEventListener('click', unlockAudio, { once: true });
+    document.body.addEventListener('touchstart', unlockAudio, { once: true });
 
     window.addEventListener('DOMContentLoaded', async () => {
       try {
@@ -352,7 +375,6 @@
     function initPeerServer() {
       if (peer) peer.destroy();
 
-      // Enhanced ICE Servers with multiple STUN and fallback options for mobile data networks
       peer = new Peer(getMyPeerId(), {
         debug: 0,
         config: {
@@ -360,6 +382,8 @@
             { urls: 'stun:stun.l.google.com:19302' },
             { urls: 'stun:stun1.l.google.com:19302' },
             { urls: 'stun:stun2.l.google.com:19302' },
+            { urls: 'stun:stun3.l.google.com:19302' },
+            { urls: 'stun:stun4.l.google.com:19302' },
             { urls: 'stun:stun.stunprotocol.org:3478' }
           ]
         }
@@ -467,6 +491,10 @@
 
     function startCall() {
       if (!localStream || !peer) return;
+      
+      // Unlock audio immediately on user click
+      unlockAudio();
+      
       document.getElementById('idleControls').classList.add('hidden');
       document.getElementById('outgoingControls').classList.remove('hidden');
       document.getElementById('partnerRing').classList.add('ring-anim');
@@ -510,6 +538,10 @@
 
     function acceptIncomingCall() {
       if (!incomingCallObj || !localStream) return;
+      
+      // Unlock audio immediately on user click for iOS
+      unlockAudio();
+      
       hideIncomingCallUI();
       incomingCallObj.answer(localStream);
       currentCall = incomingCallObj;
@@ -536,10 +568,19 @@
 
     function enterConnectedCallUI(remoteStream) {
       stopRingtone();
-      const audio = document.getElementById('remoteAudio');
-      audio.srcObject = remoteStream;
-      audio.play().catch((e) => {
-        console.log("Audio autoplay prevented:", e);
+      
+      remoteAudio.srcObject = remoteStream;
+      remoteAudio.volume = 1.0;
+      
+      // Attempt to play with fallback
+      remoteAudio.play().then(() => {
+        console.log("Audio playing successfully");
+      }).catch((e) => {
+        console.error("Audio autoplay prevented:", e);
+        // Try again after a short delay (sometimes helps on slow mobile connections)
+        setTimeout(() => {
+          remoteAudio.play().catch(err => console.log("Retry failed:", err));
+        }, 1000);
       });
 
       document.getElementById('idleControls').classList.add('hidden');
@@ -574,6 +615,9 @@
       document.getElementById('outgoingControls').classList.add('hidden');
       document.getElementById('idleControls').classList.remove('hidden');
       document.getElementById('partnerRing').classList.remove('ring-anim');
+      
+      // Clear remote audio
+      remoteAudio.srcObject = null;
     }
 
     function toggleMute() {
@@ -626,6 +670,9 @@
       const playTone = () => {
         try {
           if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          if (audioCtx.state === 'suspended') {
+            audioCtx.resume();
+          }
           const osc = audioCtx.createOscillator();
           const gain = audioCtx.createGain();
           osc.type = 'sine';
@@ -650,4 +697,4 @@
     }
   </script>
 </body>
-</html>
+  </html>
