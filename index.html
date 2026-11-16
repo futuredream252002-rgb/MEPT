@@ -82,7 +82,7 @@
       <div class="space-y-2">
         <h2 class="text-lg font-bold text-white">မိုက်ခရိုဖုန်းနှင့် အသိပေးချက် ခွင့်ပြုပါ</h2>
         <p class="text-xs text-gray-300 leading-relaxed">
-          ဖုန်းပြောဆိုနိုင်ရန်နှင့် တစ်ဖက်မှ ဖုန်းခေါ်ဆိုချိန်တွင် Notification အသံမြည်စေရန် အောက်ပါခလုတ်ကို နှိပ်၍ Allow ပေးပါ။
+          ဖုန်းပြောဆိုနိုင်ရန်နှင့် တစ်ဖက်မှ ဖုန်းခေါ်ဆိုချိန်တွင် အသံမြည်စေရန် အောက်ပါခလုတ်ကို နှိပ်၍ Allow ပေးပါ။
         </p>
       </div>
       <button onclick="requestPermissions()" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700 font-semibold text-sm shadow-lg shadow-pink-600/30 active:scale-95 transition">
@@ -93,7 +93,7 @@
       </p>
     </div>
 
-    <!-- Step 2: Role Selection (KoKo or ThaeLay) -->
+    <!-- Step 2: Role Selection -->
     <div id="roleScreen" class="hidden glass-card rounded-3xl p-6 space-y-5">
       <div class="text-center space-y-1">
         <h2 class="text-base font-bold text-pink-200">သင်၏ အကောင့်ကို ရွေးချယ်ပါ</h2>
@@ -126,9 +126,8 @@
       </div>
     </div>
 
-    <!-- Step 3: Main Calling Screen (Always Active) -->
+    <!-- Step 3: Main Calling Screen -->
     <div id="dialerScreen" class="hidden glass-card rounded-3xl p-6 text-center space-y-6 relative overflow-hidden">
-      <!-- Switch Role Small Button -->
       <div class="flex justify-between items-center text-xs text-gray-400">
         <span id="myIdentityBadge" class="px-2.5 py-1 rounded-lg bg-white/5 text-pink-200">ကျွန်ုပ်: ကိုကို</span>
         <button onclick="resetRole()" class="underline hover:text-white">ပြောင်းရန်</button>
@@ -225,7 +224,7 @@
     </div>
   </div>
 
-  <!-- Hidden Remote Audio Element -->
+  <!-- Hidden Remote Audio Element with playsinline & autoplay -->
   <audio id="remoteAudio" autoplay playsinline></audio>
 
   <footer class="text-center text-[11px] text-gray-500 pb-1">
@@ -233,7 +232,6 @@
   </footer>
 
   <script>
-    // State Variables
     let localStream = null;
     let peer = null;
     let currentCall = null;
@@ -248,7 +246,6 @@
     let ringtoneInterval = null;
     let audioCtx = null;
 
-    // Auto-detect role from URL if shared link was clicked
     const urlRole = new URLSearchParams(window.location.search).get('role');
     if (urlRole === 'boy' || urlRole === 'girl') {
       myRole = urlRole;
@@ -257,7 +254,6 @@
     localStorage.setItem('couple_room', roomCode);
     document.getElementById('roomInput').value = roomCode;
 
-    // Initialize on Load
     window.addEventListener('DOMContentLoaded', async () => {
       try {
         if (navigator.permissions && navigator.permissions.query) {
@@ -269,12 +265,9 @@
             await initMicrophone(true);
           }
         }
-      } catch (e) {
-        // Show permission gate immediately on mobile browsers
-      }
+      } catch (e) {}
     });
 
-    // Request Mic & Notification Permissions
     async function requestPermissions() {
       if ('Notification' in window && Notification.permission === 'default') {
         Notification.requestPermission().catch(() => {});
@@ -356,16 +349,18 @@
       initPeerServer();
     }
 
-    // Connect to PeerJS Cloud Signaling Server
     function initPeerServer() {
       if (peer) peer.destroy();
 
+      // Enhanced ICE Servers with multiple STUN and fallback options for mobile data networks
       peer = new Peer(getMyPeerId(), {
         debug: 0,
         config: {
           iceServers: [
             { urls: 'stun:stun.l.google.com:19302' },
-            { urls: 'stun:stun1.l.google.com:19302' }
+            { urls: 'stun:stun1.l.google.com:19302' },
+            { urls: 'stun:stun2.l.google.com:19302' },
+            { urls: 'stun:stun.stunprotocol.org:3478' }
           ]
         }
       });
@@ -390,12 +385,10 @@
         }
       });
 
-      // Handle Incoming Data Channel (Presence, Hangup, Hearts)
       peer.on('connection', (conn) => {
         setupDataConnection(conn);
       });
 
-      // Handle Incoming Voice Call
       peer.on('call', (call) => {
         incomingCallObj = call;
         showIncomingCallUI();
@@ -418,7 +411,6 @@
       }
     }
 
-    // Continuously check if partner is online
     function startPresenceHeartbeat() {
       clearInterval(presenceInterval);
       checkPartnerConnection();
@@ -473,7 +465,6 @@
       }
     }
 
-    // Start Outgoing Call
     function startCall() {
       if (!localStream || !peer) return;
       document.getElementById('idleControls').classList.add('hidden');
@@ -492,7 +483,6 @@
       });
     }
 
-    // Show Incoming Call Screen + System Notification + Ringtone
     function showIncomingCallUI() {
       const callerName = myRole === 'boy' ? 'သဲလေး' : 'ကိုကို';
       const callerEmoji = myRole === 'boy' ? '👧🏻' : '👦🏻';
@@ -503,7 +493,6 @@
 
       startRingtone();
 
-      // Trigger System Notification
       if ('Notification' in window && Notification.permission === 'granted') {
         try {
           new Notification(`📞 ${callerName} ဖုန်းခေါ်နေပါသည်...`, {
@@ -549,7 +538,9 @@
       stopRingtone();
       const audio = document.getElementById('remoteAudio');
       audio.srcObject = remoteStream;
-      audio.play().catch(() => {});
+      audio.play().catch((e) => {
+        console.log("Audio autoplay prevented:", e);
+      });
 
       document.getElementById('idleControls').classList.add('hidden');
       document.getElementById('outgoingControls').classList.add('hidden');
@@ -630,7 +621,6 @@
       });
     }
 
-    // Web Audio API Synthesized Ringtone
     function startRingtone() {
       stopRingtone();
       const playTone = () => {
