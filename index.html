@@ -1,1210 +1,663 @@
 <!DOCTYPE html>
 <html lang="my">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>နှစ်ယောက်တည်း သီးသန့်ဖုန်း - Private Couple Voice</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts: Padauk & Noto Sans Myanmar -->
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Myanmar:wght@400;600;700&family=Padauk:wght@400;700&display=swap" rel="stylesheet">
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-
-    <style>
-        :root {
-            --bg-start: #0f0a19;
-            --bg-end: #1e112a;
-            --rose-accent: #ff4d8d;
-            --violet-accent: #8b5cf6;
-        }
-
-        * {
-            -webkit-tap-highlight-color: transparent;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Padauk', 'Noto Sans Myanmar', sans-serif;
-            background: linear-gradient(160deg, var(--bg-start) 0%, #160d24 50%, var(--bg-end) 100%);
-            color: #fdf2f8;
-            min-height: 100dvh;
-            height: 100dvh;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* Glassmorphism Card */
-        .glass-card {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 77, 141, 0.25);
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-        }
-
-        /* Glowing Rose-Pink Primary Button */
-        .btn-glow-rose {
-            background: linear-gradient(135deg, #ff4d8d 0%, #e11d48 100%);
-            box-shadow: 0 10px 28px -4px rgba(255, 77, 141, 0.55);
-            transition: transform 0.18s ease, box-shadow 0.18s ease;
-        }
-        .btn-glow-rose:active {
-            transform: scale(0.97);
-        }
-
-        /* Glowing Emerald Call Button */
-        .btn-glow-call {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            box-shadow: 0 12px 32px -4px rgba(16, 185, 129, 0.5);
-            transition: transform 0.18s ease, box-shadow 0.18s ease;
-        }
-        .btn-glow-call:active {
-            transform: scale(0.97);
-        }
-
-        /* Ringing Pulse Animation */
-        @keyframes pulseRipple {
-            0% { transform: scale(0.95); opacity: 0.85; }
-            100% { transform: scale(1.7); opacity: 0; }
-        }
-        .ripple-circle {
-            position: absolute;
-            inset: 0;
-            border-radius: 9999px;
-            border: 2px solid #ff4d8d;
-            animation: pulseRipple 1.8s cubic-bezier(0.24, 0, 0.38, 1) infinite;
-        }
-        .ripple-delay {
-            animation-delay: 0.9s;
-        }
-
-        /* Speaking Glow */
-        .avatar-box {
-            transition: transform 0.12s ease, box-shadow 0.12s ease;
-        }
-        .is-speaking {
-            box-shadow: 0 0 0 6px rgba(16, 185, 129, 0.35), 0 0 30px rgba(16, 185, 129, 0.8);
-            transform: scale(1.06);
-        }
-
-        /* Floating Heart Animation */
-        @keyframes floatHeartUp {
-            0% { transform: translateY(0) scale(0.7) rotate(0deg); opacity: 1; }
-            50% { transform: translateY(-140px) scale(1.25) rotate(-12deg); opacity: 0.95; }
-            100% { transform: translateY(-300px) scale(1.5) rotate(12deg); opacity: 0; }
-        }
-        .floating-heart {
-            position: fixed;
-            bottom: 110px;
-            pointer-events: none;
-            z-index: 60;
-            animation: floatHeartUp 2.2s ease-out forwards;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>နှစ်ယောက်တည်း သီးသန့်ဖုန်း 💕</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Myanmar:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    * {
+      font-family: 'Noto Sans Myanmar', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+    body {
+      background: radial-gradient(circle at top left, #2d1438, #140b24 55%, #090612);
+      min-height: 100dvh;
+      color: #fff;
+      overflow-x: hidden;
+    }
+    .glass-card {
+      background: rgba(255, 255, 255, 0.06);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
+    }
+    @keyframes pulse-ring {
+      0% { transform: scale(0.95); opacity: 0.8; }
+      70% { transform: scale(1.35); opacity: 0; }
+      100% { transform: scale(1.35); opacity: 0; }
+    }
+    .ring-anim::before {
+      content: '';
+      position: absolute;
+      inset: -10px;
+      border-radius: 9999px;
+      border: 3px solid #ec4899;
+      animation: pulse-ring 1.6s cubic-bezier(0.24, 0, 0.38, 1) infinite;
+    }
+    @keyframes float-heart {
+      0% { transform: translateY(0) scale(0.8); opacity: 1; }
+      100% { transform: translateY(-220px) scale(1.5); opacity: 0; }
+    }
+    .heart-particle {
+      position: fixed;
+      bottom: 110px;
+      pointer-events: none;
+      animation: float-heart 2.2s ease-out forwards;
+      z-index: 50;
+    }
+  </style>
 </head>
-<body class="p-3 sm:p-5 select-none">
+<body class="flex flex-col justify-between p-4 select-none">
 
-    <!-- Ambient Orbs -->
-    <div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
-        <div class="absolute -top-20 -left-20 w-72 h-72 bg-[#ff4d8d]/15 rounded-full blur-3xl"></div>
-        <div class="absolute -bottom-24 -right-20 w-80 h-80 bg-[#8b5cf6]/15 rounded-full blur-3xl"></div>
+  <!-- Top Status Bar -->
+  <header class="flex items-center justify-between gap-2 max-w-md w-full mx-auto pt-1">
+    <div id="serverBadge" class="flex items-center gap-2 px-3 py-1.5 rounded-full glass-card text-xs font-medium">
+      <span id="serverDot" class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse"></span>
+      <span id="serverText">ချိတ်ဆက်နေသည်...</span>
+    </div>
+    <button id="micBadge" onclick="requestPermissions()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-full glass-card text-xs font-medium text-rose-300 border-rose-500/30">
+      <span id="micIcon">🎤</span>
+      <span id="micText">Mic ခွင့်ပြုရန်</span>
+    </button>
+  </header>
+
+  <!-- Main Content -->
+  <main class="max-w-md w-full mx-auto my-auto py-4">
+    <div class="text-center mb-5">
+      <h1 class="text-2xl font-bold bg-gradient-to-r from-pink-300 via-rose-300 to-purple-300 bg-clip-text text-transparent">
+        နှစ်ယောက်တည်း သီးသန့်ဖုန်း
+      </h1>
+      <p class="text-xs text-pink-200/70 mt-1">အင်တာနက်ရှိရုံဖြင့် အချိန်မရွေး တိုက်ရိုက်ခေါ်ဆိုနိုင်သည် 💕</p>
     </div>
 
-    <!-- Toast Notification Container -->
-    <div id="toast-box" class="fixed top-3 left-1/2 -translate-x-1/2 z-50 w-full max-w-sm px-4 flex flex-col gap-2 pointer-events-none"></div>
+    <!-- Step 1: Permission Gate -->
+    <div id="permissionScreen" class="glass-card rounded-3xl p-6 text-center space-y-5">
+      <div class="w-20 h-20 mx-auto rounded-full bg-gradient-to-tr from-pink-500/20 to-purple-500/20 border border-pink-400/30 flex items-center justify-center text-4xl">
+        🎙️
+      </div>
+      <div class="space-y-2">
+        <h2 class="text-lg font-bold text-white">မိုက်ခရိုဖုန်းနှင့် အသိပေးချက် ခွင့်ပြုပါ</h2>
+        <p class="text-xs text-gray-300 leading-relaxed">
+          ဖုန်းပြောဆိုနိုင်ရန်နှင့် တစ်ဖက်မှ ဖုန်းခေါ်ဆိုချိန်တွင် Notification အသံမြည်စေရန် အောက်ပါခလုတ်ကို နှိပ်၍ Allow ပေးပါ။
+        </p>
+      </div>
+      <button onclick="requestPermissions()" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700 font-semibold text-sm shadow-lg shadow-pink-600/30 active:scale-95 transition">
+        🎤 ခွင့်ပြုချက်ပေးပြီး စတင်မည်
+      </button>
+      <p id="permError" class="hidden text-xs text-amber-300 bg-amber-500/10 border border-amber-400/20 rounded-xl p-3">
+        Browser Settings ထဲတွင် Microphone ကို Block လုပ်ထားပါသည်။ Address bar ဘေးရှိ 🔒 သော့ပုံလေးကို နှိပ်ပြီး Microphone ကို Allow ပြန်ဖွင့်ပေးပါ။
+      </p>
+    </div>
 
-    <!-- Compact Top Status Bar -->
-    <header class="w-full max-w-md mx-auto flex items-center justify-between gap-2 z-10 shrink-0 pt-1 pb-2">
-        <div class="flex items-center gap-2 bg-white/5 border border-white/10 px-3 py-1.5 rounded-full">
-            <span id="conn-dot" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span id="conn-label" class="text-[11px] font-semibold text-emerald-300">Always Active</span>
-        </div>
+    <!-- Step 2: Role Selection (KoKo or ThaeLay) -->
+    <div id="roleScreen" class="hidden glass-card rounded-3xl p-6 space-y-5">
+      <div class="text-center space-y-1">
+        <h2 class="text-base font-bold text-pink-200">သင်၏ အကောင့်ကို ရွေးချယ်ပါ</h2>
+        <p class="text-xs text-gray-400">တစ်ကြိမ်ရွေးထားရုံဖြင့် အမြဲတမ်း မှတ်ထားပေးပါမည်</p>
+      </div>
 
-        <button id="header-mic-badge" class="flex items-center gap-1.5 bg-white/5 border border-white/10 px-3 py-1.5 rounded-full text-[11px] text-pink-200">
-            <i id="header-mic-icon" class="fa-solid fa-microphone text-amber-400"></i>
-            <span id="header-mic-text">Mic အခြေအနေ</span>
+      <div class="grid grid-cols-2 gap-3">
+        <button onclick="selectRole('boy')" class="p-4 rounded-2xl bg-white/5 hover:bg-blue-500/20 border border-white/10 hover:border-blue-400/50 flex flex-col items-center gap-2 transition active:scale-95">
+          <span class="text-4xl">👦🏻</span>
+          <span class="font-bold text-sm text-blue-200">ကိုကို</span>
+          <span class="text-[11px] text-gray-400">Boy Account</span>
         </button>
-    </header>
 
-    <!-- Main Centered Viewport Container -->
-    <main class="flex-1 w-full max-w-md mx-auto flex flex-col justify-center z-10 overflow-y-auto py-1">
+        <button onclick="selectRole('girl')" class="p-4 rounded-2xl bg-white/5 hover:bg-pink-500/20 border border-white/10 hover:border-pink-400/50 flex flex-col items-center gap-2 transition active:scale-95">
+          <span class="text-4xl">👧🏻</span>
+          <span class="font-bold text-sm text-pink-200">သဲလေး</span>
+          <span class="text-[11px] text-gray-400">Girl Account</span>
+        </button>
+      </div>
 
-        <!-- Title Banner -->
-        <div class="text-center mb-3 shrink-0">
-            <h1 class="text-xl sm:text-2xl font-bold bg-gradient-to-r from-pink-200 via-[#ff4d8d] to-violet-300 bg-clip-text text-transparent">
-                နှစ်ယောက်တည်း သီးသန့်ဖုန်း
-            </h1>
-            <p class="text-[11px] text-pink-200/65">
-                အင်တာနက်ရှိရုံဖြင့် အချိန်မရွေး တိုက်ရိုက်ခေါ်ဆိုနိုင်သည် 💕
-            </p>
+      <!-- Secret Room Code -->
+      <div class="pt-2 border-t border-white/10">
+        <label class="text-[11px] text-gray-400 block mb-1.5">နှစ်ဦးသဘောတူ လျှို့ဝှက်ကုဒ် (တူညီရပါမည်)</label>
+        <div class="flex gap-2">
+          <input id="roomInput" type="text" value="love2026" class="flex-1 bg-black/30 border border-white/15 rounded-xl px-3 py-2 text-sm text-pink-200 focus:outline-none focus:border-pink-400" />
+          <button onclick="saveRoomCode()" class="px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-medium">
+            သိမ်းမည်
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3: Main Calling Screen (Always Active) -->
+    <div id="dialerScreen" class="hidden glass-card rounded-3xl p-6 text-center space-y-6 relative overflow-hidden">
+      <!-- Switch Role Small Button -->
+      <div class="flex justify-between items-center text-xs text-gray-400">
+        <span id="myIdentityBadge" class="px-2.5 py-1 rounded-lg bg-white/5 text-pink-200">ကျွန်ုပ်: ကိုကို</span>
+        <button onclick="resetRole()" class="underline hover:text-white">ပြောင်းရန်</button>
+      </div>
+
+      <!-- Partner Avatar & Status -->
+      <div class="py-3 space-y-3">
+        <div class="relative w-28 h-28 mx-auto flex items-center justify-center">
+          <div id="partnerRing" class="w-28 h-28 rounded-full bg-gradient-to-tr from-pink-500/30 to-purple-500/30 border-2 border-pink-400/40 flex items-center justify-center text-5xl shadow-xl">
+            👧🏻
+          </div>
+          <span id="partnerOnlineDot" class="absolute bottom-1 right-1 w-5 h-5 rounded-full bg-gray-500 border-4 border-[#1b102c]"></span>
         </div>
 
-        <!-- =========================================================
-             SCREEN 1: MICROPHONE PERMISSION GATE (NO HANGING!)
-        ========================================================== -->
-        <section id="screen-mic-gate" class="hidden glass-card rounded-3xl p-5 sm:p-7 text-center">
-            <div class="w-16 h-16 rounded-full bg-[#ff4d8d]/20 border border-[#ff4d8d]/40 flex items-center justify-center mx-auto mb-3 text-[#ff4d8d]">
-                <i class="fa-solid fa-microphone text-2xl animate-bounce"></i>
-            </div>
-            <h2 class="text-lg font-bold text-white mb-1.5">
-                မိုက်ခရိုဖုန်း ခွင့်ပြုချက် လိုအပ်ပါသည်
-            </h2>
-            <p class="text-xs text-pink-200/80 leading-relaxed mb-5">
-                ချစ်သူနှင့် အသံကြည်လင်စွာ ဖုန်းပြောနိုင်ရန် အောက်ပါခလုတ်ကို နှိပ်ပြီး <strong>Allow</strong> ပေးပါ။
-            </p>
+        <div>
+          <h2 id="partnerName" class="text-xl font-bold text-white">သဲလေး</h2>
+          <p id="partnerStatusText" class="text-xs text-amber-300 mt-1">အွန်လိုင်း ရှိ/မရှိ စစ်ဆေးနေသည်...</p>
+        </div>
+      </div>
 
-            <button id="btn-grant-mic" class="btn-glow-rose w-full py-3.5 px-5 rounded-2xl font-bold text-white text-sm sm:text-base flex items-center justify-center gap-2.5 cursor-pointer mb-3">
-                <span>🎤 မိုက်ခရိုဖုန်း ခွင့်ပြုချက်ပေးမည်</span>
-            </button>
+      <!-- Idle Action Buttons -->
+      <div id="idleControls" class="space-y-3">
+        <button id="callBtn" onclick="startCall()" class="w-full py-4 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 font-bold text-base shadow-lg shadow-emerald-600/30 flex items-center justify-center gap-2 active:scale-95 transition">
+          <span class="text-xl">📞</span>
+          <span id="callBtnText">သဲလေးထံ ဖုန်းခေါ်မည်</span>
+        </button>
 
-            <!-- Troubleshooting Box (Shown if Blocked / Error) -->
-            <div id="mic-troubleshoot-box" class="hidden mt-3 p-3.5 rounded-2xl bg-rose-950/75 border border-rose-500/40 text-left text-[11px] text-rose-100 space-y-1.5">
-                <p class="font-bold text-rose-300">
-                    <i class="fa-solid fa-triangle-exclamation mr-1"></i>မိုက်ခရိုဖုန်း ပိတ်မိနေပါသည် (Blocked)
-                </p>
-                <p>၁။ အပေါ်ဆုံး Address Bar (<span class="underline">mept.vercel.app</span>) ဘေးရှိ <strong>🔒 (Lock)</strong> သို့မဟုတ် <strong>Settings</strong> ပုံလေးကို နှိပ်ပါ။</p>
-                <p>၂။ <strong>Permissions → Microphone</strong> ကို <strong>Allow</strong> ပြောင်းပေးပါ။</p>
-                <p>၃။ ပြီးလျှင် အောက်ပါခလုတ်ကို ပြန်နှိပ်ပါ။</p>
-                <button id="btn-retry-mic" class="mt-2 w-full py-2 rounded-xl bg-white/15 hover:bg-white/25 font-bold text-white text-xs cursor-pointer">
-                    🔄 ပြန်စစ်ဆေးမည် (Retry)
-                </button>
-            </div>
-        </section>
+        <button onclick="copyInviteLink()" class="w-full py-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs text-pink-200 flex items-center justify-center gap-1.5 transition">
+          <span>🔗</span>
+          <span>ချစ်သူထံ အမြဲသုံး လင့်ခ်ပို့မည်</span>
+        </button>
+      </div>
 
-        <!-- =========================================================
-             SCREEN 2: ROLE SELECTOR ("ကိုကို" vs "သဲလေး")
-        ========================================================== -->
-        <section id="screen-role" class="hidden glass-card rounded-3xl p-5 sm:p-7 text-center">
-            <h2 class="text-lg font-bold text-white mb-1">သင့်နေရာကို ရွေးချယ်ပါ</h2>
-            <p class="text-xs text-pink-200/70 mb-5">
-                တစ်ကြိမ်သာ ရွေးထားရုံဖြင့် ဒီဖုန်းမှာ အမြဲမှတ်ထားပေးပါမည်။
-            </p>
+      <!-- Outgoing Calling Controls -->
+      <div id="outgoingControls" class="hidden space-y-4">
+        <p class="text-sm text-pink-300 animate-pulse">📞 ဖုန်းခေါ်ဆိုနေပါသည်... ဖုန်းကိုင်ရန် စောင့်နေသည်</p>
+        <button onclick="endCall(true)" class="w-16 h-16 mx-auto rounded-full bg-rose-600 hover:bg-rose-700 flex items-center justify-center text-2xl shadow-lg shadow-rose-600/40 active:scale-90 transition">
+          📵
+        </button>
+        <p class="text-xs text-gray-400">ဖုန်းချမည်</p>
+      </div>
 
-            <div class="grid grid-cols-2 gap-3.5">
-                <button data-pick-role="boy" class="role-card flex flex-col items-center p-4 rounded-2xl bg-white/5 hover:bg-violet-500/20 border border-white/15 hover:border-violet-400 transition cursor-pointer">
-                    <div class="w-16 h-16 rounded-full bg-gradient-to-tr from-violet-600 to-sky-400 flex items-center justify-center text-3xl mb-2 shadow-lg">
-                        👦🏻
-                    </div>
-                    <span class="font-bold text-white text-base">ကိုကို</span>
-                    <span class="text-[11px] text-pink-200/60">ကောင်လေး</span>
-                </button>
+      <!-- In-Call Active Controls -->
+      <div id="inCallControls" class="hidden space-y-5">
+        <div class="inline-block px-4 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-sm font-mono" id="callTimer">
+          00:00
+        </div>
 
-                <button data-pick-role="girl" class="role-card flex flex-col items-center p-4 rounded-2xl bg-white/5 hover:bg-[#ff4d8d]/20 border border-white/15 hover:border-[#ff4d8d] transition cursor-pointer">
-                    <div class="w-16 h-16 rounded-full bg-gradient-to-tr from-[#ff4d8d] to-pink-400 flex items-center justify-center text-3xl mb-2 shadow-lg">
-                        👧🏻
-                    </div>
-                    <span class="font-bold text-white text-base">သဲလေး</span>
-                    <span class="text-[11px] text-pink-200/60">ကောင်မလေး</span>
-                </button>
-            </div>
-        </section>
+        <div class="flex items-center justify-center gap-5">
+          <button id="muteBtn" onclick="toggleMute()" class="w-14 h-14 rounded-full bg-white/10 hover:bg-white/20 flex flex-col items-center justify-center text-xl transition">
+            <span id="muteIcon">🎙️</span>
+          </button>
 
-        <!-- =========================================================
-             SCREEN 3: MAIN ALWAYS-ON CALLING DASHBOARD
-        ========================================================== -->
-        <section id="screen-dashboard" class="hidden glass-card rounded-3xl p-5 sm:p-6">
-            <!-- Top Identity Row -->
-            <div class="flex items-center justify-between pb-3.5 mb-4 border-b border-white/10">
-                <div class="flex items-center gap-2.5">
-                    <span id="dash-my-emoji" class="text-2xl">👦🏻</span>
-                    <div>
-                        <span class="block text-[10px] text-pink-200/60">သင့်အကောင့်</span>
-                        <span id="dash-my-name" class="text-sm font-bold text-white">ကိုကို</span>
-                    </div>
-                </div>
-                <button id="btn-switch-role" class="text-[11px] text-pink-200/80 bg-white/5 hover:bg-white/10 border border-white/10 px-2.5 py-1.5 rounded-xl cursor-pointer">
-                    <i class="fa-solid fa-repeat mr-1"></i>နေရာပြောင်း
-                </button>
-            </div>
+          <button onclick="endCall(true)" class="w-16 h-16 rounded-full bg-rose-600 hover:bg-rose-700 flex items-center justify-center text-2xl shadow-lg shadow-rose-600/40 active:scale-90 transition">
+            📵
+          </button>
 
-            <!-- Partner Live Status Card -->
-            <div class="bg-[#0b0714]/75 border border-[#ff4d8d]/20 rounded-2xl p-4 text-center mb-5">
-                <div class="relative inline-block mb-2.5">
-                    <div class="w-20 h-20 rounded-full bg-gradient-to-tr from-[#ff4d8d] to-violet-500 p-1 mx-auto">
-                        <div class="w-full h-full rounded-full bg-[#160d24] flex items-center justify-center text-4xl">
-                            <span id="dash-partner-emoji">👧🏻</span>
-                        </div>
-                    </div>
-                    <span id="partner-status-dot" class="absolute bottom-1 right-1 w-4 h-4 rounded-full bg-slate-500 border-2 border-[#160d24]"></span>
-                </div>
+          <button onclick="sendHeart()" class="w-14 h-14 rounded-full bg-pink-500/20 hover:bg-pink-500/30 border border-pink-400/30 flex items-center justify-center text-2xl active:scale-90 transition">
+            ❤️
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
 
-                <h2 id="dash-partner-name" class="text-lg font-bold text-white">သဲလေး</h2>
-                <p id="partner-status-text" class="text-xs font-medium text-pink-200/65 mt-0.5">
-                    အွန်လိုင်း အခြေအနေ စစ်ဆေးနေသည်...
-                </p>
-            </div>
+  <!-- Full-Screen Incoming Call Modal -->
+  <div id="incomingModal" class="hidden fixed inset-0 z-50 bg-[#120822]/95 backdrop-blur-xl flex flex-col items-center justify-between p-8 text-center">
+    <div class="pt-10 space-y-2">
+      <span class="px-3 py-1 rounded-full bg-pink-500/20 text-pink-300 text-xs font-medium animate-pulse">
+        📲 အဝင်ဖုန်းခေါ်ဆိုမှု
+      </span>
+      <h2 id="callerTitle" class="text-3xl font-bold text-white pt-4">ကိုကို</h2>
+      <p class="text-sm text-pink-200/80">သင့်ထံ ဖုန်းခေါ်ဆိုနေပါသည်...</p>
+    </div>
 
-            <!-- BIG CALL BUTTON -->
-            <button id="btn-call-now" class="btn-glow-call w-full py-4 px-5 rounded-2xl font-bold text-white text-base sm:text-lg flex items-center justify-center gap-3 cursor-pointer mb-3">
-                <i class="fa-solid fa-phone-volume text-xl animate-bounce"></i>
-                <span id="btn-call-label">ဖုန်းခေါ်မည်</span>
-            </button>
+    <div class="relative w-36 h-36 rounded-full bg-gradient-to-tr from-pink-500 to-purple-600 flex items-center justify-center text-6xl shadow-2xl ring-anim">
+      <span id="callerEmoji">👦🏻</span>
+    </div>
 
-            <!-- SHARE PERMANENT LINK BUTTON -->
-            <button id="btn-share-link" class="w-full py-3 px-4 rounded-2xl bg-white/5 hover:bg-white/10 border border-pink-300/20 text-pink-100 text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer">
-                <i class="fa-solid fa-share-nodes text-[#ff4d8d]"></i>
-                <span>ချစ်သူထံ လင့်ခ်ပို့မည်</span>
-            </button>
+    <div class="w-full max-w-xs flex items-center justify-around pb-10">
+      <div class="flex flex-col items-center gap-2">
+        <button onclick="rejectIncomingCall()" class="w-16 h-16 rounded-full bg-rose-600 hover:bg-rose-700 flex items-center justify-center text-2xl shadow-lg shadow-rose-600/40 active:scale-90 transition">
+          📵
+        </button>
+        <span class="text-xs text-gray-300">ဖုန်းချမည်</span>
+      </div>
 
-            <!-- Room ID subtle footer -->
-            <p id="room-id-caption" class="text-center text-[10px] text-pink-200/40 mt-3 font-mono"></p>
-        </section>
+      <div class="flex flex-col items-center gap-2">
+        <button onclick="acceptIncomingCall()" class="w-16 h-16 rounded-full bg-emerald-500 hover:bg-emerald-600 flex items-center justify-center text-2xl shadow-lg shadow-emerald-500/40 animate-bounce active:scale-90 transition">
+          📞
+        </button>
+        <span class="text-xs text-emerald-300 font-semibold">ဖုန်းကိုင်မည်</span>
+      </div>
+    </div>
+  </div>
 
-        <!-- =========================================================
-             SCREEN 4: OUTGOING CALL (RINGING PARTNER)
-        ========================================================== -->
-        <section id="screen-outgoing" class="hidden glass-card rounded-3xl p-6 text-center">
-            <p class="text-xs font-semibold text-emerald-300 mb-5">
-                <i class="fa-solid fa-satellite-dish mr-1.5 animate-pulse"></i>ဖုန်းခေါ်ဆိုနေပါသည်...
-            </p>
+  <!-- Hidden Remote Audio Element -->
+  <audio id="remoteAudio" autoplay playsinline></audio>
 
-            <div class="relative w-28 h-28 mx-auto mb-4 flex items-center justify-center">
-                <div class="ripple-circle"></div>
-                <div class="ripple-circle ripple-delay"></div>
-                <div class="w-24 h-24 rounded-full bg-gradient-to-tr from-[#ff4d8d] to-violet-500 p-1 relative z-10">
-                    <div class="w-full h-full rounded-full bg-[#160d24] flex items-center justify-center text-4xl">
-                        <span id="out-partner-emoji">👧🏻</span>
-                    </div>
-                </div>
-            </div>
+  <footer class="text-center text-[11px] text-gray-500 pb-1">
+    End-to-End Encrypted Direct Couple Line 🔒
+  </footer>
 
-            <h2 id="out-partner-name" class="text-xl font-bold text-white mb-1">သဲလေး</h2>
-            <p class="text-xs text-pink-200/70 mb-8">တစ်ဖက်မှ ဖုန်းကိုင်ရန် စောင့်ဆိုင်းနေသည်...</p>
+  <script>
+    // State Variables
+    let localStream = null;
+    let peer = null;
+    let currentCall = null;
+    let dataConn = null;
+    let incomingCallObj = null;
+    let myRole = localStorage.getItem('couple_role') || null;
+    let roomCode = new URLSearchParams(window.location.search).get('room') || localStorage.getItem('couple_room') || 'love2026';
+    let isMuted = false;
+    let callSeconds = 0;
+    let timerInterval = null;
+    let presenceInterval = null;
+    let ringtoneInterval = null;
+    let audioCtx = null;
 
-            <button id="btn-cancel-call" class="w-16 h-16 rounded-full bg-rose-600 hover:bg-rose-500 text-white shadow-lg shadow-rose-600/40 flex items-center justify-center mx-auto cursor-pointer">
-                <i class="fa-solid fa-phone-slash text-2xl"></i>
-            </button>
-            <span class="block text-xs text-pink-200/75 mt-2">ဖုန်းချမည်</span>
-        </section>
+    // Auto-detect role from URL if shared link was clicked
+    const urlRole = new URLSearchParams(window.location.search).get('role');
+    if (urlRole === 'boy' || urlRole === 'girl') {
+      myRole = urlRole;
+      localStorage.setItem('couple_role', myRole);
+    }
+    localStorage.setItem('couple_room', roomCode);
+    document.getElementById('roomInput').value = roomCode;
 
-        <!-- =========================================================
-             SCREEN 5: INCOMING CALL (FULL-SCREEN RINGING)
-        ========================================================== -->
-        <section id="screen-incoming" class="hidden glass-card rounded-3xl p-6 text-center border-emerald-400/50">
-            <div class="inline-flex items-center gap-2 bg-emerald-500/20 border border-emerald-400/40 px-3.5 py-1 rounded-full text-xs text-emerald-300 font-bold mb-5">
-                <i class="fa-solid fa-phone-volume animate-bounce"></i>
-                <span>ဖုန်းဝင်နေပါသည်...</span>
-            </div>
-
-            <div class="relative w-28 h-28 mx-auto mb-4 flex items-center justify-center">
-                <div class="ripple-circle" style="border-color: #10b981;"></div>
-                <div class="ripple-circle ripple-delay" style="border-color: #10b981;"></div>
-                <div class="w-24 h-24 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-300 p-1 relative z-10">
-                    <div class="w-full h-full rounded-full bg-[#160d24] flex items-center justify-center text-4xl">
-                        <span id="in-caller-emoji">👧🏻</span>
-                    </div>
-                </div>
-            </div>
-
-            <h2 id="in-caller-name" class="text-2xl font-bold text-white mb-1">သဲလေး</h2>
-            <p class="text-xs text-pink-200/80 mb-8">သင့်ထံ ဖုန်းခေါ်ဆိုနေပါသည် 💕</p>
-
-            <div class="flex items-center justify-around gap-4">
-                <div class="flex flex-col items-center">
-                    <button id="btn-decline-call" class="w-16 h-16 rounded-full bg-rose-600 hover:bg-rose-500 text-white shadow-lg shadow-rose-600/40 flex items-center justify-center cursor-pointer">
-                        <i class="fa-solid fa-phone-slash text-2xl"></i>
-                    </button>
-                    <span class="text-xs text-rose-200 mt-2 font-semibold">ဖုန်းချမည်</span>
-                </div>
-
-                <div class="flex flex-col items-center">
-                    <button id="btn-answer-call" class="w-16 h-16 rounded-full bg-emerald-500 hover:bg-emerald-400 text-white shadow-lg shadow-emerald-500/50 flex items-center justify-center animate-bounce cursor-pointer">
-                        <i class="fa-solid fa-phone text-2xl"></i>
-                    </button>
-                    <span class="text-xs text-emerald-300 mt-2 font-bold">ဖုန်းကိုင်မည်</span>
-                </div>
-            </div>
-        </section>
-
-        <!-- =========================================================
-             SCREEN 6: ACTIVE VOICE CALL SCREEN
-        ========================================================== -->
-        <section id="screen-active" class="hidden glass-card rounded-3xl p-5 sm:p-6">
-            <!-- Timer Header -->
-            <div class="flex items-center justify-between mb-5">
-                <div class="flex items-center gap-2 bg-emerald-500/15 border border-emerald-400/30 px-3 py-1 rounded-full">
-                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-                    <span class="text-xs font-bold text-emerald-300">စကားပြောနေသည် 💕</span>
-                </div>
-                <span id="call-duration" class="font-mono text-sm font-bold text-white bg-white/10 px-3 py-1 rounded-full">
-                    00:00
-                </span>
-            </div>
-
-            <!-- Dual Avatars with Audio Visualizer Ring -->
-            <div class="flex items-center justify-around my-6">
-                <div class="flex flex-col items-center">
-                    <div id="vis-local-ring" class="avatar-box w-20 h-20 rounded-full bg-gradient-to-tr from-violet-500 to-sky-400 p-1">
-                        <div class="w-full h-full rounded-full bg-[#160d24] flex items-center justify-center text-3xl">
-                            <span id="act-local-emoji">👦🏻</span>
-                        </div>
-                    </div>
-                    <span id="act-local-name" class="mt-2.5 text-sm font-bold text-white">ကိုကို</span>
-                    <span id="act-mic-sub" class="text-[10px] text-emerald-300">အသံဖွင့်ထားသည်</span>
-                </div>
-
-                <div class="flex items-center gap-1 text-[#ff4d8d]">
-                    <span class="w-1 h-4 bg-[#ff4d8d]/60 rounded-full animate-pulse"></span>
-                    <span class="w-1 h-7 bg-[#ff4d8d] rounded-full animate-bounce"></span>
-                    <i class="fa-solid fa-heart text-[#ff4d8d] mx-1"></i>
-                    <span class="w-1 h-7 bg-[#ff4d8d] rounded-full animate-bounce"></span>
-                    <span class="w-1 h-4 bg-[#ff4d8d]/60 rounded-full animate-pulse"></span>
-                </div>
-
-                <div class="flex flex-col items-center">
-                    <div id="vis-remote-ring" class="avatar-box w-20 h-20 rounded-full bg-gradient-to-tr from-[#ff4d8d] to-pink-400 p-1">
-                        <div class="w-full h-full rounded-full bg-[#160d24] flex items-center justify-center text-3xl">
-                            <span id="act-remote-emoji">👧🏻</span>
-                        </div>
-                    </div>
-                    <span id="act-remote-name" class="mt-2.5 text-sm font-bold text-white">သဲလေး</span>
-                    <span class="text-[10px] text-emerald-300">ချိတ်ဆက်ထားသည်</span>
-                </div>
-            </div>
-
-            <!-- Send Floating Heart Button -->
-            <button id="btn-send-heart" class="w-full mb-4 py-2.5 px-4 rounded-2xl bg-[#ff4d8d]/15 hover:bg-[#ff4d8d]/25 border border-[#ff4d8d]/40 text-pink-100 text-xs font-bold flex items-center justify-center gap-2 cursor-pointer">
-                <span>❤️ အသည်းပို့မည်</span>
-            </button>
-
-            <!-- Call Controls -->
-            <div class="grid grid-cols-3 gap-2.5 pt-3 border-t border-white/10">
-                <button id="btn-mute" class="flex flex-col items-center justify-center gap-1 py-3 px-2 rounded-2xl bg-white/10 hover:bg-white/15 border border-white/15 text-white cursor-pointer">
-                    <i id="mute-icon" class="fa-solid fa-microphone text-base text-emerald-400"></i>
-                    <span id="mute-label" class="text-[11px] font-medium">အသံပိတ်</span>
-                </button>
-
-                <button id="btn-speaker" class="flex flex-col items-center justify-center gap-1 py-3 px-2 rounded-2xl bg-emerald-500/20 border border-emerald-400/40 text-emerald-200 cursor-pointer">
-                    <i id="speaker-icon" class="fa-solid fa-volume-high text-base text-emerald-300"></i>
-                    <span id="speaker-label" class="text-[11px] font-medium">စပီကာ ဖွင့်</span>
-                </button>
-
-                <button id="btn-end-call" class="flex flex-col items-center justify-center gap-1 py-3 px-2 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white shadow-lg shadow-rose-600/35 cursor-pointer">
-                    <i class="fa-solid fa-phone-slash text-base"></i>
-                    <span class="text-[11px] font-bold">ဖုန်းချမည်</span>
-                </button>
-            </div>
-        </section>
-
-        <!-- Partner Audio Stream Element -->
-        <audio id="remote-audio" autoplay playsinline></audio>
-    </main>
-
-    <!-- Firebase Realtime Database + WebRTC Logic -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import {
-            getDatabase, ref, set, get, update, remove, push,
-            onValue, onChildAdded, onDisconnect, serverTimestamp
-        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
-
-        // ============================================================
-        // 1. FIREBASE INITIALIZATION (WORKS ON VERCEL & CANVAS)
-        // ============================================================
-        const fallbackFirebaseConfig = {
-            apiKey: "AIzaSyDummyKeyForPublicRTDBDemo123456789",
-            authDomain: "couple-voice-direct.firebaseapp.com",
-            databaseURL: "https://couple-voice-direct-default-rtdb.firebaseio.com",
-            projectId: "couple-voice-direct",
-            storageBucket: "couple-voice-direct.appspot.com",
-            messagingSenderId: "102938475610",
-            appId: "1:102938475610:web:abcdef1234567890"
-        };
-
-        let firebaseConfig = fallbackFirebaseConfig;
-        try {
-            if (typeof __firebase_config !== 'undefined' && __firebase_config) {
-                const parsed = JSON.parse(__firebase_config);
-                if (parsed && parsed.databaseURL) {
-                    firebaseConfig = parsed;
-                } else if (parsed && parsed.projectId) {
-                    firebaseConfig = {
-                        ...parsed,
-                        databaseURL: `https://${parsed.projectId}-default-rtdb.firebaseio.com`
-                    };
-                }
-            }
-        } catch (e) {
-            console.warn("Using fallback Firebase RTDB config:", e);
+    // Initialize on Load
+    window.addEventListener('DOMContentLoaded', async () => {
+      try {
+        if (navigator.permissions && navigator.permissions.query) {
+          const status = await Promise.race([
+            navigator.permissions.query({ name: 'microphone' }),
+            new Promise((_, reject) => setTimeout(() => reject('timeout'), 1200))
+          ]);
+          if (status.state === 'granted') {
+            await initMicrophone(true);
+          }
         }
+      } catch (e) {
+        // Show permission gate immediately on mobile browsers
+      }
+    });
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const rtdb = getDatabase(app);
+    // Request Mic & Notification Permissions
+    async function requestPermissions() {
+      if ('Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission().catch(() => {});
+      }
+      await initMicrophone(false);
+    }
 
-        // ============================================================
-        // 2. ROOM & ROLE PERSISTENCE (URL + LOCALSTORAGE)
-        // ============================================================
-        const urlParams = new URLSearchParams(window.location.search);
-        let roomId = urlParams.get('room') || localStorage.getItem('couple_room_id');
-        if (!roomId) {
-            roomId = 'love_' + Math.random().toString(36).substring(2, 10);
-        }
-        localStorage.setItem('couple_room_id', roomId);
+    async function initMicrophone(silent) {
+      try {
+        localStream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true
+          },
+          video: false
+        });
 
-        let myRole = urlParams.get('role') || localStorage.getItem('couple_my_role');
-        if (myRole !== 'boy' && myRole !== 'girl') {
-            myRole = null;
+        document.getElementById('micIcon').textContent = '✅';
+        document.getElementById('micText').textContent = 'Mic အသင့်ဖြစ်ပြီ';
+        document.getElementById('micBadge').classList.replace('text-rose-300', 'text-emerald-300');
+        document.getElementById('permError').classList.add('hidden');
+
+        document.getElementById('permissionScreen').classList.add('hidden');
+        if (myRole) {
+          enterDialer();
         } else {
-            localStorage.setItem('couple_my_role', myRole);
+          document.getElementById('roleScreen').classList.remove('hidden');
         }
-
-        // Sync URL cleanly without page reload
-        function syncUrlState() {
-            const params = new URLSearchParams();
-            params.set('room', roomId);
-            if (myRole) params.set('role', myRole);
-            window.history.replaceState({}, '', `${window.location.pathname}?${params.toString()}`);
-            document.getElementById('room-id-caption').textContent = `Room: ${roomId}`;
+      } catch (err) {
+        if (!silent) {
+          document.getElementById('permError').classList.remove('hidden');
         }
-        syncUrlState();
+      }
+    }
 
-        const ROLES = {
-            boy: { name: 'ကိုကို', emoji: '👦🏻', partner: 'girl' },
-            girl: { name: 'သဲလေး', emoji: '👧🏻', partner: 'boy' }
-        };
+    function selectRole(role) {
+      myRole = role;
+      localStorage.setItem('couple_role', role);
+      saveRoomCode();
+      document.getElementById('roleScreen').classList.add('hidden');
+      enterDialer();
+    }
 
-        // ============================================================
-        // 3. SCREEN & TOAST HELPERS
-        // ============================================================
-        const screens = {
-            mic: document.getElementById('screen-mic-gate'),
-            role: document.getElementById('screen-role'),
-            dashboard: document.getElementById('screen-dashboard'),
-            outgoing: document.getElementById('screen-outgoing'),
-            incoming: document.getElementById('screen-incoming'),
-            active: document.getElementById('screen-active')
-        };
+    function saveRoomCode() {
+      const val = document.getElementById('roomInput').value.trim().replace(/[^a-zA-Z0-9_-]/g, '');
+      if (val) {
+        roomCode = val;
+        localStorage.setItem('couple_room', roomCode);
+      }
+    }
 
-        function showScreen(key) {
-            Object.values(screens).forEach(el => el.classList.add('hidden'));
-            if (screens[key]) screens[key].classList.remove('hidden');
+    function resetRole() {
+      if (peer) peer.destroy();
+      clearInterval(presenceInterval);
+      myRole = null;
+      localStorage.removeItem('couple_role');
+      document.getElementById('dialerScreen').classList.add('hidden');
+      document.getElementById('roleScreen').classList.remove('hidden');
+    }
+
+    function getMyPeerId() {
+      return `couple_${roomCode}_${myRole}`;
+    }
+
+    function getPartnerPeerId() {
+      const partnerRole = myRole === 'boy' ? 'girl' : 'boy';
+      return `couple_${roomCode}_${partnerRole}`;
+    }
+
+    function enterDialer() {
+      document.getElementById('dialerScreen').classList.remove('hidden');
+      const isBoy = myRole === 'boy';
+      document.getElementById('myIdentityBadge').textContent = isBoy ? 'ကျွန်ုပ်: 👦🏻 ကိုကို' : 'ကျွန်ုပ်: 👧🏻 သဲလေး';
+      document.getElementById('partnerName').textContent = isBoy ? 'သဲလေး' : 'ကိုကို';
+      document.getElementById('partnerRing').textContent = isBoy ? '👧🏻' : '👦🏻';
+      document.getElementById('callBtnText').textContent = isBoy ? 'သဲလေးထံ ဖုန်းခေါ်မည်' : 'ကိုကို့ထံ ဖုန်းခေါ်မည်';
+
+      initPeerServer();
+    }
+
+    // Connect to PeerJS Cloud Signaling Server
+    function initPeerServer() {
+      if (peer) peer.destroy();
+
+      peer = new Peer(getMyPeerId(), {
+        debug: 0,
+        config: {
+          iceServers: [
+            { urls: 'stun:stun.l.google.com:19302' },
+            { urls: 'stun:stun1.l.google.com:19302' }
+          ]
         }
+      });
 
-        function showToast(msg, isError = false) {
-            const box = document.getElementById('toast-box');
-            const item = document.createElement('div');
-            item.className = `${isError ? 'bg-rose-950/95 border-rose-500/50 text-rose-100' : 'bg-[#1b112c]/95 border-pink-400/40 text-pink-100'} border backdrop-blur-md px-4 py-2.5 rounded-2xl shadow-xl text-xs flex items-center gap-2 transition-opacity duration-300`;
-            item.innerHTML = `<i class="fa-solid ${isError ? 'fa-circle-exclamation text-rose-400' : 'fa-heart text-[#ff4d8d]'}"></i><span>${msg}</span>`;
-            box.appendChild(item);
-            setTimeout(() => {
-                item.style.opacity = '0';
-                setTimeout(() => item.remove(), 300);
-            }, 3200);
+      peer.on('open', () => {
+        setServerStatus('online', 'အွန်လိုင်းချိတ်ဆက်ပြီး');
+        startPresenceHeartbeat();
+      });
+
+      peer.on('disconnected', () => {
+        setServerStatus('reconnecting', 'ပြန်လည်ချိတ်ဆက်နေသည်...');
+        setTimeout(() => {
+          if (peer && !peer.destroyed) peer.reconnect();
+        }, 2000);
+      });
+
+      peer.on('error', (err) => {
+        if (err.type === 'peer-unavailable') {
+          setPartnerOnline(false);
+        } else if (err.type === 'unavailable-id') {
+          setServerStatus('online', 'ချိတ်ဆက်ပြီး (Active)');
         }
+      });
 
-        // ============================================================
-        // 4. NON-BLOCKING MOBILE MICROPHONE GATE (1.5s TIMEOUT)
-        // ============================================================
-        let audioUnlockedCtx = null;
+      // Handle Incoming Data Channel (Presence, Hangup, Hearts)
+      peer.on('connection', (conn) => {
+        setupDataConnection(conn);
+      });
 
-        function setHeaderMicBadge(granted) {
-            const icon = document.getElementById('header-mic-icon');
-            const text = document.getElementById('header-mic-text');
-            if (granted) {
-                icon.className = 'fa-solid fa-microphone text-emerald-400';
-                text.textContent = 'Mic အသင့်ဖြစ်ပြီ';
-                text.className = 'text-emerald-300 font-semibold';
-            } else {
-                icon.className = 'fa-solid fa-microphone-slash text-rose-400';
-                text.textContent = 'Mic ခွင့်ပြုချက်လိုသည်';
-                text.className = 'text-rose-300 font-semibold';
-            }
-        }
+      // Handle Incoming Voice Call
+      peer.on('call', (call) => {
+        incomingCallObj = call;
+        showIncomingCallUI();
 
-        function unlockMobileAudioContext() {
-            try {
-                const AudioCtx = window.AudioContext || window.webkitAudioContext;
-                if (!audioUnlockedCtx && AudioCtx) {
-                    audioUnlockedCtx = new AudioCtx();
-                }
-                if (audioUnlockedCtx && audioUnlockedCtx.state === 'suspended') {
-                    audioUnlockedCtx.resume();
-                }
-            } catch (e) {}
-        }
-
-        async function checkMicPermissionWithTimeout() {
-            // 1.5s strict timeout so mobile Safari/Chrome NEVER hangs on "Mic စစ်ဆေးနေသည်..."
-            const timeoutPromise = new Promise(resolve => setTimeout(() => resolve('timeout'), 1500));
-
-            const queryPromise = (async () => {
-                try {
-                    if (navigator.permissions && navigator.permissions.query) {
-                        const res = await navigator.permissions.query({ name: 'microphone' });
-                        return res.state; // 'granted' | 'prompt' | 'denied'
-                    }
-                } catch (e) {}
-                return 'unsupported';
-            })();
-
-            const state = await Promise.race([queryPromise, timeoutPromise]);
-
-            if (state === 'granted') {
-                localStorage.setItem('couple_mic_granted', 'true');
-                setHeaderMicBadge(true);
-                return true;
-            }
-
-            // Not explicitly 'granted' -> immediately show the full-screen Permission Gate
-            setHeaderMicBadge(false);
-            if (state === 'denied') {
-                document.getElementById('mic-troubleshoot-box').classList.remove('hidden');
-            }
-            showScreen('mic');
-            return false;
-        }
-
-        async function handleGrantMicClick() {
-            unlockMobileAudioContext();
-            const btn = document.getElementById('btn-grant-mic');
-            const originalHtml = btn.innerHTML;
-            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i><span>ခွင့်ပြုချက် တောင်းခံနေသည်...</span>`;
-            btn.disabled = true;
-
-            try {
-                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                    throw new Error('NotSupported');
-                }
-                const stream = await navigator.mediaDevices.getUserMedia({
-                    audio: {
-                        echoCancellation: true,
-                        noiseSuppression: true,
-                        autoGainControl: true
-                    },
-                    video: false
-                });
-                // Release stream immediately; we re-acquire cleanly when placing/answering a call
-                stream.getTracks().forEach(track => track.stop());
-
-                localStorage.setItem('couple_mic_granted', 'true');
-                setHeaderMicBadge(true);
-                document.getElementById('mic-troubleshoot-box').classList.add('hidden');
-                showToast("မိုက်ခရိုဖုန်း အသုံးပြုခွင့် ရရှိပါပြီ 💕");
-
-                proceedAfterMicGranted();
-            } catch (err) {
-                console.warn("getUserMedia error:", err);
-                setHeaderMicBadge(false);
-                document.getElementById('mic-troubleshoot-box').classList.remove('hidden');
-                showToast("မိုက်ခရိုဖုန်း ခွင့်ပြုချက် မရသေးပါ။ အောက်ပါလမ်းညွှန်အတိုင်း ဖွင့်ပေးပါ။", true);
-            } finally {
-                btn.innerHTML = originalHtml;
-                btn.disabled = false;
-            }
-        }
-
-        document.getElementById('btn-grant-mic').addEventListener('click', handleGrantMicClick);
-        document.getElementById('btn-retry-mic').addEventListener('click', handleGrantMicClick);
-        document.getElementById('header-mic-badge').addEventListener('click', () => {
-            showScreen('mic');
+        call.on('close', () => {
+          hideIncomingCallUI();
+          endCall(false);
         });
+      });
+    }
 
-        // ============================================================
-        // 5. RINGTONE & VIBRATION ENGINE
-        // ============================================================
-        let ringTimer = null;
+    function setServerStatus(state, text) {
+      const dot = document.getElementById('serverDot');
+      const label = document.getElementById('serverText');
+      label.textContent = text;
+      if (state === 'online') {
+        dot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-400';
+      } else {
+        dot.className = 'w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse';
+      }
+    }
 
-        function startRingtone(isIncoming) {
-            stopRingtone();
-            unlockMobileAudioContext();
+    // Continuously check if partner is online
+    function startPresenceHeartbeat() {
+      clearInterval(presenceInterval);
+      checkPartnerConnection();
+      presenceInterval = setInterval(checkPartnerConnection, 4000);
+    }
 
-            const playTone = () => {
-                if (isIncoming && navigator.vibrate) {
-                    navigator.vibrate([350, 200, 350]);
-                }
-                if (!audioUnlockedCtx) return;
-                try {
-                    const now = audioUnlockedCtx.currentTime;
-                    const notes = isIncoming ? [523.25, 659.25, 783.99, 1046.5] : [440, 554.37];
-                    notes.forEach((freq, i) => {
-                        const osc = audioUnlockedCtx.createOscillator();
-                        const gain = audioUnlockedCtx.createGain();
-                        osc.type = 'sine';
-                        osc.frequency.setValueAtTime(freq, now + i * 0.13);
+    function checkPartnerConnection() {
+      if (!peer || peer.disconnected || peer.destroyed) return;
+      if (dataConn && dataConn.open) {
+        dataConn.send({ type: 'ping' });
+        setPartnerOnline(true);
+        return;
+      }
+      const conn = peer.connect(getPartnerPeerId(), { reliable: true });
+      setupDataConnection(conn);
+    }
 
-                        gain.gain.setValueAtTime(0.001, now + i * 0.13);
-                        gain.gain.exponentialRampToValueAtTime(isIncoming ? 0.16 : 0.06, now + i * 0.13 + 0.04);
-                        gain.gain.exponentialRampToValueAtTime(0.0001, now + i * 0.13 + 0.5);
+    function setupDataConnection(conn) {
+      conn.on('open', () => {
+        dataConn = conn;
+        setPartnerOnline(true);
+        conn.send({ type: 'ping' });
+      });
 
-                        osc.connect(gain);
-                        gain.connect(audioUnlockedCtx.destination);
-                        osc.start(now + i * 0.13);
-                        osc.stop(now + i * 0.13 + 0.55);
-                    });
-                } catch (e) {}
-            };
-
-            playTone();
-            ringTimer = setInterval(playTone, isIncoming ? 2100 : 2900);
+      conn.on('data', (data) => {
+        setPartnerOnline(true);
+        if (data.type === 'hangup') {
+          hideIncomingCallUI();
+          endCall(false);
+        } else if (data.type === 'heart') {
+          spawnFloatingHeart();
         }
-
-        function stopRingtone() {
-            if (ringTimer) {
-                clearInterval(ringTimer);
-                ringTimer = null;
-            }
-            if (navigator.vibrate) {
-                navigator.vibrate(0);
-            }
-        }
-
-        // ============================================================
-        // 6. REAL-TIME PRESENCE & HEARTBEAT (RTDB)
-        // ============================================================
-        let heartbeatTimer = null;
-        let rtdbListenersAttached = false;
-
-        function setupPresenceSystem() {
-            if (!myRole) return;
-            const myPresenceRef = ref(rtdb, `rooms/${roomId}/presence/${myRole}`);
-            const connectedRef = ref(rtdb, '.info/connected');
-
-            onValue(connectedRef, (snap) => {
-                const dot = document.getElementById('conn-dot');
-                const label = document.getElementById('conn-label');
-                if (snap.val() === true) {
-                    dot.className = 'w-2 h-2 rounded-full bg-emerald-400 animate-pulse';
-                    label.textContent = 'Always Active';
-                    label.className = 'text-[11px] font-semibold text-emerald-300';
-
-                    onDisconnect(myPresenceRef).set({
-                        online: false,
-                        lastSeen: serverTimestamp()
-                    });
-
-                    set(myPresenceRef, {
-                        online: true,
-                        lastSeen: Date.now()
-                    });
-                } else {
-                    dot.className = 'w-2 h-2 rounded-full bg-amber-400';
-                    label.textContent = 'ချိတ်ဆက်နေသည်...';
-                    label.className = 'text-[11px] font-semibold text-amber-300';
-                }
-            });
-
-            if (heartbeatTimer) clearInterval(heartbeatTimer);
-            heartbeatTimer = setInterval(() => {
-                if (myRole) {
-                    update(myPresenceRef, { online: true, lastSeen: Date.now() }).catch(() => {});
-                }
-            }, 10000);
-
-            document.addEventListener('visibilitychange', () => {
-                if (document.visibilityState === 'visible' && myRole) {
-                    set(myPresenceRef, { online: true, lastSeen: Date.now() }).catch(() => {});
-                }
-            });
-
-            // Watch Partner's Online Presence
-            const partnerRole = ROLES[myRole].partner;
-            const partnerPresenceRef = ref(rtdb, `rooms/${roomId}/presence/${partnerRole}`);
-            onValue(partnerPresenceRef, (snap) => {
-                const data = snap.val();
-                const dot = document.getElementById('partner-status-dot');
-                const text = document.getElementById('partner-status-text');
-
-                const isFresh = data && data.online && (Date.now() - (data.lastSeen || 0) < 35000);
-                if (isFresh) {
-                    dot.className = 'absolute bottom-1 right-1 w-4 h-4 rounded-full bg-emerald-400 border-2 border-[#160d24] animate-ping';
-                    text.textContent = 'အွန်လိုင်းရှိနေသည် 💚';
-                    text.className = 'text-xs font-bold text-emerald-300 mt-0.5';
-                } else {
-                    dot.className = 'absolute bottom-1 right-1 w-4 h-4 rounded-full bg-amber-400 border-2 border-[#160d24]';
-                    text.textContent = 'လတ်တလော အော့ဖ်လိုင်း (ခေါ်ဆိုထားနိုင်သည်)';
-                    text.className = 'text-xs font-medium text-amber-200/75 mt-0.5';
-                }
-            });
-        }
-
-        // ============================================================
-        // 7. WEBRTC DIRECT VOICE CALLING & FLOATING HEARTS
-        // ============================================================
-        let peerConnection = null;
-        let localStream = null;
-        let remoteStream = null;
-        let callState = 'idle'; // 'idle' | 'outgoing' | 'incoming' | 'connected'
-        let currentCallId = null;
-        let isMuted = false;
-        let isSpeakerLoud = true;
-        let durationTimer = null;
-        let durationSec = 0;
-
-        const rtcConfig = {
-            iceServers: [
-                { urls: 'stun:stun.l.google.com:19302' },
-                { urls: 'stun:stun1.l.google.com:19302' }
-            ]
-        };
-
-        async function getLocalAudioStream() {
-            try {
-                localStream = await navigator.mediaDevices.getUserMedia({
-                    audio: {
-                        echoCancellation: true,
-                        noiseSuppression: true,
-                        autoGainControl: true
-                    },
-                    video: false
-                });
-                startLocalVisualizer();
-                return true;
-            } catch (e) {
-                showScreen('mic');
-                document.getElementById('mic-troubleshoot-box').classList.remove('hidden');
-                return false;
-            }
-        }
-
-        function createPeerConnection() {
-            peerConnection = new RTCPeerConnection(rtcConfig);
-            localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
-
-            remoteStream = new MediaStream();
-            const remoteAudioEl = document.getElementById('remote-audio');
-            remoteAudioEl.srcObject = remoteStream;
-
-            peerConnection.ontrack = (event) => {
-                event.streams[0].getTracks().forEach(track => remoteStream.addTrack(track));
-                startRemoteVisualizer();
-            };
-
-            peerConnection.onconnectionstatechange = () => {
-                const st = peerConnection.connectionState;
-                if (st === 'connected') {
-                    onCallConnected();
-                } else if (st === 'failed' || st === 'disconnected') {
-                    showToast("လိုင်းပြတ်တောက်သွားပါသည်။", true);
-                    endAndCleanupCall(true);
-                }
-            };
-        }
-
-        function onCallConnected() {
-            if (callState === 'connected') return;
-            callState = 'connected';
-            stopRingtone();
-
-            const partnerRole = ROLES[myRole].partner;
-            document.getElementById('act-local-emoji').textContent = ROLES[myRole].emoji;
-            document.getElementById('act-local-name').textContent = ROLES[myRole].name;
-            document.getElementById('act-remote-emoji').textContent = ROLES[partnerRole].emoji;
-            document.getElementById('act-remote-name').textContent = ROLES[partnerRole].name;
-
-            showScreen('active');
-
-            if (!durationTimer) {
-                durationSec = 0;
-                durationTimer = setInterval(() => {
-                    durationSec++;
-                    const m = String(Math.floor(durationSec / 60)).padStart(2, '0');
-                    const s = String(durationSec % 60).padStart(2, '0');
-                    document.getElementById('call-duration').textContent = `${m}:${s}`;
-                }, 1000);
-            }
-        }
-
-        function attachCallAndHeartListeners() {
-            if (rtdbListenersAttached) return;
-            rtdbListenersAttached = true;
-
-            const callRef = ref(rtdb, `rooms/${roomId}/activeCall`);
-            onValue(callRef, async (snap) => {
-                const data = snap.val();
-                if (!data) {
-                    if (callState !== 'idle') endAndCleanupCall(false);
-                    return;
-                }
-
-                const partnerRole = ROLES[myRole].partner;
-
-                // Incoming Ringing Call
-                if (data.status === 'ringing' && data.callee === myRole && callState === 'idle') {
-                    callState = 'incoming';
-                    currentCallId = data.callId;
-                    document.getElementById('in-caller-emoji').textContent = ROLES[partnerRole].emoji;
-                    document.getElementById('in-caller-name').textContent = ROLES[partnerRole].name;
-                    showScreen('incoming');
-                    startRingtone(true);
-                }
-
-                // Outgoing Call Answered by Partner
-                if (data.status === 'answered' && data.caller === myRole && data.callId === currentCallId && data.answer) {
-                    if (peerConnection && !peerConnection.currentRemoteDescription) {
-                        await peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
-                        onCallConnected();
-                    }
-                }
-
-                // Call Ended / Declined
-                if (data.status === 'ended' && callState !== 'idle') {
-                    showToast(callState === 'outgoing' ? "တစ်ဖက်မှ ဖုန်းချလိုက်ပါသည်။" : "ဖုန်းပြောဆိုမှု ပြီးဆုံးပါပြီ 💕");
-                    endAndCleanupCall(false);
-                }
-            });
-
-            // Synced Floating Hearts Listener
-            const heartsRef = ref(rtdb, `rooms/${roomId}/hearts`);
-            onChildAdded(heartsRef, (snap) => {
-                const val = snap.val();
-                if (val && Date.now() - val.ts < 8000) {
-                    spawnFloatingHeartUI();
-                }
-            });
-        }
-
-        // OUTGOING CALL BUTTON
-        document.getElementById('btn-call-now').addEventListener('click', async () => {
-            unlockMobileAudioContext();
-            const ok = await getLocalAudioStream();
-            if (!ok) return;
-
-            const partnerRole = ROLES[myRole].partner;
-            currentCallId = 'c_' + Date.now();
-            callState = 'outgoing';
-
-            document.getElementById('out-partner-emoji').textContent = ROLES[partnerRole].emoji;
-            document.getElementById('out-partner-name').textContent = ROLES[partnerRole].name;
-            showScreen('outgoing');
-            startRingtone(false);
-
-            // Clear old ICE nodes
-            await remove(ref(rtdb, `rooms/${roomId}/ice`)).catch(() => {});
-
-            createPeerConnection();
-
-            const callerIceRef = ref(rtdb, `rooms/${roomId}/ice/${currentCallId}/caller`);
-            peerConnection.onicecandidate = (e) => {
-                if (e.candidate) {
-                    push(callerIceRef, e.candidate.toJSON());
-                }
-            };
-
-            const offer = await peerConnection.createOffer();
-            await peerConnection.setLocalDescription(offer);
-
-            await set(ref(rtdb, `rooms/${roomId}/activeCall`), {
-                callId: currentCallId,
-                caller: myRole,
-                callee: partnerRole,
-                status: 'ringing',
-                offer: { type: offer.type, sdp: offer.sdp },
-                updatedAt: Date.now()
-            });
-
-            // Listen for Partner's ICE candidates
-            const calleeIceRef = ref(rtdb, `rooms/${roomId}/ice/${currentCallId}/callee`);
-            onChildAdded(calleeIceRef, async (snap) => {
-                const cand = snap.val();
-                if (cand && peerConnection && peerConnection.remoteDescription) {
-                    await peerConnection.addIceCandidate(new RTCIceCandidate(cand)).catch(() => {});
-                }
-            });
-        });
-
-        // ANSWER INCOMING CALL BUTTON
-        document.getElementById('btn-answer-call').addEventListener('click', async () => {
-            unlockMobileAudioContext();
-            stopRingtone();
-
-            const ok = await getLocalAudioStream();
-            if (!ok) return;
-
-            const callRef = ref(rtdb, `rooms/${roomId}/activeCall`);
-            const snap = await get(callRef);
-            const data = snap.val();
-
-            if (!data || data.status !== 'ringing') {
-                showToast("ခေါ်ဆိုမှု ပြီးဆုံးသွားပါပြီ။", true);
-                endAndCleanupCall(false);
-                return;
-            }
-
-            currentCallId = data.callId;
-            createPeerConnection();
-
-            const calleeIceRef = ref(rtdb, `rooms/${roomId}/ice/${currentCallId}/callee`);
-            peerConnection.onicecandidate = (e) => {
-                if (e.candidate) {
-                    push(calleeIceRef, e.candidate.toJSON());
-                }
-            };
-
-            await peerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
-            const answer = await peerConnection.createAnswer();
-            await peerConnection.setLocalDescription(answer);
-
-            await update(callRef, {
-                status: 'answered',
-                answer: { type: answer.type, sdp: answer.sdp },
-                updatedAt: Date.now()
-            });
-
-            // Listen for Caller's ICE candidates
-            const callerIceRef = ref(rtdb, `rooms/${roomId}/ice/${currentCallId}/caller`);
-            onChildAdded(callerIceRef, async (snap) => {
-                const cand = snap.val();
-                if (cand && peerConnection && peerConnection.remoteDescription) {
-                    await peerConnection.addIceCandidate(new RTCIceCandidate(cand)).catch(() => {});
-                }
-            });
-
-            onCallConnected();
-        });
-
-        // CANCEL / DECLINE / END CALL
-        document.getElementById('btn-cancel-call').addEventListener('click', () => endAndCleanupCall(true));
-        document.getElementById('btn-decline-call').addEventListener('click', () => endAndCleanupCall(true));
-        document.getElementById('btn-end-call').addEventListener('click', () => endAndCleanupCall(true));
-
-        async function endAndCleanupCall(notifyPartner) {
-            stopRingtone();
-            callState = 'idle';
-            currentCallId = null;
-
-            if (durationTimer) {
-                clearInterval(durationTimer);
-                durationTimer = null;
-            }
-            if (localStream) {
-                localStream.getTracks().forEach(t => t.stop());
-                localStream = null;
-            }
-            if (peerConnection) {
-                peerConnection.close();
-                peerConnection = null;
-            }
-
-            isMuted = false;
-            document.getElementById('mute-icon').className = 'fa-solid fa-microphone text-base text-emerald-400';
-            document.getElementById('mute-label').textContent = 'အသံပိတ်';
-            document.getElementById('act-mic-sub').textContent = 'အသံဖွင့်ထားသည်';
-            document.getElementById('call-duration').textContent = '00:00';
-
-            showScreen('dashboard');
-
-            if (notifyPartner) {
-                await set(ref(rtdb, `rooms/${roomId}/activeCall`), {
-                    status: 'ended',
-                    updatedAt: Date.now()
-                }).catch(() => {});
-            }
-        }
-
-        // ============================================================
-        // 8. MUTE, SPEAKER, VISUALIZER & FLOATING HEARTS
-        // ============================================================
-        document.getElementById('btn-mute').addEventListener('click', () => {
-            if (!localStream) return;
-            isMuted = !isMuted;
-            localStream.getAudioTracks().forEach(t => t.enabled = !isMuted);
-
-            const icon = document.getElementById('mute-icon');
-            const label = document.getElementById('mute-label');
-            const sub = document.getElementById('act-mic-sub');
-
-            if (isMuted) {
-                icon.className = 'fa-solid fa-microphone-slash text-base text-rose-400';
-                label.textContent = 'အသံပြန်ဖွင့်';
-                sub.textContent = 'အသံပိတ်ထားသည်';
-                sub.className = 'text-[10px] text-rose-300';
-            } else {
-                icon.className = 'fa-solid fa-microphone text-base text-emerald-400';
-                label.textContent = 'အသံပိတ်';
-                sub.textContent = 'အသံဖွင့်ထားသည်';
-                sub.className = 'text-[10px] text-emerald-300';
-            }
-        });
-
-        document.getElementById('btn-speaker').addEventListener('click', () => {
-            const audioEl = document.getElementById('remote-audio');
-            const btn = document.getElementById('btn-speaker');
-            const icon = document.getElementById('speaker-icon');
-            const label = document.getElementById('speaker-label');
-
-            isSpeakerLoud = !isSpeakerLoud;
-            audioEl.volume = isSpeakerLoud ? 1.0 : 0.45;
-
-            if (isSpeakerLoud) {
-                btn.className = 'flex flex-col items-center justify-center gap-1 py-3 px-2 rounded-2xl bg-emerald-500/20 border border-emerald-400/40 text-emerald-200 cursor-pointer';
-                icon.className = 'fa-solid fa-volume-high text-base text-emerald-300';
-                label.textContent = 'စပီကာ ဖွင့်';
-            } else {
-                btn.className = 'flex flex-col items-center justify-center gap-1 py-3 px-2 rounded-2xl bg-white/10 border border-white/15 text-pink-200 cursor-pointer';
-                icon.className = 'fa-solid fa-volume-low text-base text-pink-300';
-                label.textContent = 'အသံတိုး';
-            }
-        });
-
-        function startLocalVisualizer() {
-            if (!localStream || !audioUnlockedCtx) return;
-            try {
-                const analyser = audioUnlockedCtx.createAnalyser();
-                const source = audioUnlockedCtx.createMediaStreamSource(localStream);
-                source.connect(analyser);
-                analyser.fftSize = 64;
-                const data = new Uint8Array(analyser.frequencyBinCount);
-                const ring = document.getElementById('vis-local-ring');
-
-                const tick = () => {
-                    if (!localStream || callState !== 'connected') {
-                        ring.classList.remove('is-speaking');
-                        return;
-                    }
-                    if (!isMuted) {
-                        analyser.getByteFrequencyData(data);
-                        const avg = data.reduce((a, b) => a + b, 0) / data.length;
-                        ring.classList.toggle('is-speaking', avg > 16);
-                    } else {
-                        ring.classList.remove('is-speaking');
-                    }
-                    requestAnimationFrame(tick);
-                };
-                tick();
-            } catch (e) {}
-        }
-
-        function startRemoteVisualizer() {
-            if (!remoteStream || !audioUnlockedCtx) return;
-            try {
-                const analyser = audioUnlockedCtx.createAnalyser();
-                const source = audioUnlockedCtx.createMediaStreamSource(remoteStream);
-                source.connect(analyser);
-                analyser.fftSize = 64;
-                const data = new Uint8Array(analyser.frequencyBinCount);
-                const ring = document.getElementById('vis-remote-ring');
-
-                const tick = () => {
-                    if (!remoteStream || callState !== 'connected') {
-                        ring.classList.remove('is-speaking');
-                        return;
-                    }
-                    analyser.getByteFrequencyData(data);
-                    const avg = data.reduce((a, b) => a + b, 0) / data.length;
-                    ring.classList.toggle('is-speaking', avg > 16);
-                    requestAnimationFrame(tick);
-                };
-                tick();
-            } catch (e) {}
-        }
-
-        // Send Floating Heart via RTDB
-        document.getElementById('btn-send-heart').addEventListener('click', () => {
-            push(ref(rtdb, `rooms/${roomId}/hearts`), {
-                from: myRole,
-                ts: Date.now()
-            }).catch(() => {});
-        });
-
-        function spawnFloatingHeartUI() {
-            const heart = document.createElement('div');
-            const emojis = ['❤️', '💖', '💕', '💗', '💓'];
-            heart.textContent = emojis[Math.floor(Math.random() * emojis.length)];
-            heart.className = 'floating-heart text-3xl';
-            heart.style.left = (20 + Math.random() * 60) + 'vw';
-            document.body.appendChild(heart);
-            setTimeout(() => heart.remove(), 2250);
-        }
-
-        // ============================================================
-        // 9. ROLE SELECTION & PERMANENT LINK SHARE
-        // ============================================================
-        function enterDashboardForRole(role) {
-            myRole = role;
-            localStorage.setItem('couple_my_role', role);
-            syncUrlState();
-
-            const partnerRole = ROLES[role].partner;
-            document.getElementById('dash-my-emoji').textContent = ROLES[role].emoji;
-            document.getElementById('dash-my-name').textContent = ROLES[role].name;
-
-            document.getElementById('dash-partner-emoji').textContent = ROLES[partnerRole].emoji;
-            document.getElementById('dash-partner-name').textContent = ROLES[partnerRole].name;
-            document.getElementById('btn-call-label').textContent = `${ROLES[partnerRole].name} ဆီ ဖုန်းခေါ်မည်`;
-
-            showScreen('dashboard');
-            setupPresenceSystem();
-            attachCallAndHeartListeners();
-        }
-
-        document.querySelectorAll('.role-card').forEach(btn => {
-            btn.addEventListener('click', () => {
-                unlockMobileAudioContext();
-                const picked = btn.getAttribute('data-pick-role');
-                enterDashboardForRole(picked);
-            });
-        });
-
-        document.getElementById('btn-switch-role').addEventListener('click', () => {
-            showScreen('role');
-        });
-
-        document.getElementById('btn-share-link').addEventListener('click', async () => {
-            const partnerRole = myRole ? ROLES[myRole].partner : 'girl';
-            const shareUrl = `${window.location.origin}${window.location.pathname}?room=${roomId}&role=${partnerRole}`;
-
-            if (navigator.share) {
-                try {
-                    await navigator.share({
-                        title: 'နှစ်ယောက်တည်း သီးသန့်ဖုန်း 💕',
-                        text: 'ဒီလင့်ခ်လေးကို ဖွင့်ထားလိုက်နော် ကိုယ်တို့ နှစ်ယောက်တည်း အချိန်မရွေး ဖုန်းပြောလို့ရအောင် 💌',
-                        url: shareUrl
-                    });
-                    return;
-                } catch (e) {}
-            }
-
-            // Fallback Clipboard Copy
-            const ta = document.createElement('textarea');
-            ta.value = shareUrl;
-            ta.style.position = 'fixed';
-            ta.style.left = '-9999px';
-            document.body.appendChild(ta);
-            ta.select();
-            try {
-                document.execCommand('copy');
-                showToast("ချစ်သူထံ ပို့ရန် လင့်ခ်ကို ကူးယူပြီးပါပြီ 💌");
-            } catch (e) {
-                showToast("လင့်ခ် ကူးယူ၍ မရနိုင်ပါ။", true);
-            }
-            document.body.removeChild(ta);
-        });
-
-        // ============================================================
-        // 10. APP BOOTSTRAP FLOW
-        // ============================================================
-        function proceedAfterMicGranted() {
-            if (myRole === 'boy' || myRole === 'girl') {
-                enterDashboardForRole(myRole);
-            } else {
-                showScreen('role');
-            }
-        }
-
-        async function initApp() {
-            // Silent Auth in background (does not block UI)
-            try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
-            } catch (e) {
-                console.warn("Auth notice:", e);
-            }
-
-            // Non-hanging Microphone Check
-            const isMicReady = await checkMicPermissionWithTimeout();
-            if (isMicReady) {
-                proceedAfterMicGranted();
-            }
-        }
-
-        initApp();
-    </script>
+      });
+
+      conn.on('close', () => {
+        if (dataConn === conn) dataConn = null;
+        setPartnerOnline(false);
+      });
+    }
+
+    function setPartnerOnline(isOnline) {
+      const dot = document.getElementById('partnerOnlineDot');
+      const statusText = document.getElementById('partnerStatusText');
+      if (isOnline) {
+        dot.className = 'absolute bottom-1 right-1 w-5 h-5 rounded-full bg-emerald-400 border-4 border-[#1b102c]';
+        statusText.textContent = '🟢 အွန်လိုင်းရှိနေသည် • ခေါ်ဆိုနိုင်ပါပြီ';
+        statusText.className = 'text-xs text-emerald-300 font-medium mt-1';
+      } else {
+        dot.className = 'absolute bottom-1 right-1 w-5 h-5 rounded-full bg-gray-500 border-4 border-[#1b102c]';
+        statusText.textContent = '⚪ အော့ဖ်လိုင်း (Website ဖွင့်ထားရန် လိုအပ်သည်)';
+        statusText.className = 'text-xs text-gray-400 mt-1';
+      }
+    }
+
+    // Start Outgoing Call
+    function startCall() {
+      if (!localStream || !peer) return;
+      document.getElementById('idleControls').classList.add('hidden');
+      document.getElementById('outgoingControls').classList.remove('hidden');
+      document.getElementById('partnerRing').classList.add('ring-anim');
+
+      const call = peer.call(getPartnerPeerId(), localStream);
+      currentCall = call;
+
+      call.on('stream', (remoteStream) => {
+        enterConnectedCallUI(remoteStream);
+      });
+
+      call.on('close', () => {
+        endCall(false);
+      });
+    }
+
+    // Show Incoming Call Screen + System Notification + Ringtone
+    function showIncomingCallUI() {
+      const callerName = myRole === 'boy' ? 'သဲလေး' : 'ကိုကို';
+      const callerEmoji = myRole === 'boy' ? '👧🏻' : '👦🏻';
+
+      document.getElementById('callerTitle').textContent = callerName;
+      document.getElementById('callerEmoji').textContent = callerEmoji;
+      document.getElementById('incomingModal').classList.remove('hidden');
+
+      startRingtone();
+
+      // Trigger System Notification
+      if ('Notification' in window && Notification.permission === 'granted') {
+        try {
+          new Notification(`📞 ${callerName} ဖုန်းခေါ်နေပါသည်...`, {
+            body: 'ဖုန်းကိုင်ရန် ဤနေရာကို နှိပ်ပါ 💕',
+            vibrate: [300, 100, 300]
+          });
+        } catch (e) {}
+      }
+    }
+
+    function hideIncomingCallUI() {
+      document.getElementById('incomingModal').classList.add('hidden');
+      stopRingtone();
+    }
+
+    function acceptIncomingCall() {
+      if (!incomingCallObj || !localStream) return;
+      hideIncomingCallUI();
+      incomingCallObj.answer(localStream);
+      currentCall = incomingCallObj;
+
+      incomingCallObj.on('stream', (remoteStream) => {
+        enterConnectedCallUI(remoteStream);
+      });
+
+      incomingCallObj.on('close', () => {
+        endCall(false);
+      });
+    }
+
+    function rejectIncomingCall() {
+      hideIncomingCallUI();
+      if (dataConn && dataConn.open) {
+        dataConn.send({ type: 'hangup' });
+      }
+      if (incomingCallObj) {
+        incomingCallObj.close();
+        incomingCallObj = null;
+      }
+    }
+
+    function enterConnectedCallUI(remoteStream) {
+      stopRingtone();
+      const audio = document.getElementById('remoteAudio');
+      audio.srcObject = remoteStream;
+      audio.play().catch(() => {});
+
+      document.getElementById('idleControls').classList.add('hidden');
+      document.getElementById('outgoingControls').classList.add('hidden');
+      document.getElementById('inCallControls').classList.remove('hidden');
+      document.getElementById('partnerRing').classList.add('ring-anim');
+
+      clearInterval(timerInterval);
+      callSeconds = 0;
+      updateTimerDisplay();
+      timerInterval = setInterval(() => {
+        callSeconds++;
+        updateTimerDisplay();
+      }, 1000);
+    }
+
+    function endCall(notifyPartner) {
+      stopRingtone();
+      hideIncomingCallUI();
+      clearInterval(timerInterval);
+
+      if (notifyPartner && dataConn && dataConn.open) {
+        dataConn.send({ type: 'hangup' });
+      }
+      if (currentCall) {
+        currentCall.close();
+        currentCall = null;
+      }
+      incomingCallObj = null;
+
+      document.getElementById('inCallControls').classList.add('hidden');
+      document.getElementById('outgoingControls').classList.add('hidden');
+      document.getElementById('idleControls').classList.remove('hidden');
+      document.getElementById('partnerRing').classList.remove('ring-anim');
+    }
+
+    function toggleMute() {
+      if (!localStream) return;
+      isMuted = !isMuted;
+      localStream.getAudioTracks().forEach(track => (track.enabled = !isMuted));
+      const btn = document.getElementById('muteBtn');
+      const icon = document.getElementById('muteIcon');
+      if (isMuted) {
+        icon.textContent = '🔇';
+        btn.classList.add('bg-rose-500/30', 'border', 'border-rose-400/50');
+      } else {
+        icon.textContent = '🎙️';
+        btn.classList.remove('bg-rose-500/30', 'border', 'border-rose-400/50');
+      }
+    }
+
+    function sendHeart() {
+      spawnFloatingHeart();
+      if (dataConn && dataConn.open) {
+        dataConn.send({ type: 'heart' });
+      }
+    }
+
+    function spawnFloatingHeart() {
+      const heart = document.createElement('div');
+      heart.className = 'heart-particle text-3xl';
+      heart.textContent = ['❤️', '💖', '💕', '🥰'][Math.floor(Math.random() * 4)];
+      heart.style.left = `${20 + Math.random() * 60}%`;
+      document.body.appendChild(heart);
+      setTimeout(() => heart.remove(), 2200);
+    }
+
+    function updateTimerDisplay() {
+      const mins = String(Math.floor(callSeconds / 60)).padStart(2, '0');
+      const secs = String(callSeconds % 60).padStart(2, '0');
+      document.getElementById('callTimer').textContent = `${mins}:${secs}`;
+    }
+
+    function copyInviteLink() {
+      const partnerRole = myRole === 'boy' ? 'girl' : 'boy';
+      const url = `${window.location.origin}${window.location.pathname}?room=${encodeURIComponent(roomCode)}&role=${partnerRole}`;
+      navigator.clipboard.writeText(url).then(() => {
+        alert('ချစ်သူထံ ပို့ရမည့် လင့်ခ်ကို ကူးယူပြီးပါပြီ 💕\nသူမဖွင့်လိုက်သည်နှင့် တိုက်ရိုက်ချိတ်ဆက်မိပါမည်။');
+      });
+    }
+
+    // Web Audio API Synthesized Ringtone
+    function startRingtone() {
+      stopRingtone();
+      const playTone = () => {
+        try {
+          if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(523.25, audioCtx.currentTime);
+          osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.25);
+          gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.6);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start();
+          osc.stop(audioCtx.currentTime + 0.6);
+          if (navigator.vibrate) navigator.vibrate([300, 150, 300]);
+        } catch (e) {}
+      };
+      playTone();
+      ringtoneInterval = setInterval(playTone, 1800);
+    }
+
+    function stopRingtone() {
+      clearInterval(ringtoneInterval);
+      if (navigator.vibrate) navigator.vibrate(0);
+    }
+  </script>
 </body>
 </html>
